@@ -217,6 +217,20 @@
     </div>
 
     <script>
+        // Load saved data on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedResetTime = localStorage.getItem('claudeUsageResetTime');
+            const savedCurrentUsage = localStorage.getItem('claudeUsageCurrentUsage');
+
+            if (savedResetTime) {
+                document.getElementById('resetTime').value = savedResetTime;
+            }
+
+            if (savedCurrentUsage) {
+                document.getElementById('currentUsage').value = savedCurrentUsage;
+            }
+        });
+
         document.getElementById('usageForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -246,6 +260,10 @@
                 showError('Please enter a valid usage percentage (0-100).');
                 return;
             }
+
+            // Save data to localStorage
+            localStorage.setItem('claudeUsageResetTime', resetTimeInput);
+            localStorage.setItem('claudeUsageCurrentUsage', currentUsage.toString());
 
             // Calculate time elapsed
             const weekDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
