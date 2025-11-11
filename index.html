@@ -183,7 +183,7 @@
 
         <form id="usageForm">
             <div class="form-group">
-                <label for="resetTime">Weekly Limit Reset Date & Time</label>
+                <label for="resetTime">Next Weekly Reset Date & Time</label>
                 <input type="datetime-local" id="resetTime" required>
             </div>
 
@@ -251,8 +251,8 @@
                 return;
             }
 
-            if (resetTime >= now) {
-                showError('Reset time must be in the past (the start of the current week).');
+            if (resetTime <= now) {
+                showError('Reset time must be in the future (the next weekly reset).');
                 return;
             }
 
@@ -267,10 +267,12 @@
 
             // Calculate time elapsed
             const weekDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-            const timeSinceReset = now - resetTime;
+            // Calculate previous reset (7 days before next reset)
+            const previousReset = new Date(resetTime.getTime() - weekDuration);
+            const timeSinceReset = now - previousReset;
             const timeElapsedPercentage = (timeSinceReset / weekDuration) * 100;
 
-            // Ensure we don't go over 100% (in case reset time is more than a week ago)
+            // Ensure we don't go over 100% (in case we're somehow past the next reset)
             const cappedTimeElapsed = Math.min(timeElapsedPercentage, 100);
 
             // Calculate difference
