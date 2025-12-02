@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Usage Monitor</title>
+    <title>Claude Usage Monitor - Are You Under or Over?</title>
+    <meta name="description" content="Track your Claude subscription usage rate and see if you're pacing under or over your weekly limit.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23667eea'/><text x='50' y='65' font-size='45' text-anchor='middle' fill='white'>%25</text></svg>">
     <style>
         * {
             margin: 0;
@@ -11,11 +13,36 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd6;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --success-dark: #065f46;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --danger-dark: #991b1b;
+            --neutral-50: #f9fafb;
+            --neutral-100: #f3f4f6;
+            --neutral-200: #e5e7eb;
+            --neutral-300: #d1d5db;
+            --neutral-400: #9ca3af;
+            --neutral-500: #6b7280;
+            --neutral-600: #4b5563;
+            --neutral-700: #374151;
+            --neutral-800: #1f2937;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 50px -12px rgb(0 0 0 / 0.25);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -23,23 +50,68 @@
 
         .container {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            padding: 0;
+            max-width: 460px;
             width: 100%;
+            overflow: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--neutral-800) 0%, var(--neutral-700) 100%);
+            padding: 28px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: var(--neutral-400);
             font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .subtitle strong {
+            color: var(--neutral-300);
+        }
+
+        /* Main Content */
+        .content {
+            padding: 28px 32px 32px;
         }
 
         .form-group {
@@ -47,27 +119,59 @@
         }
 
         label {
-            display: block;
-            margin-bottom: 8px;
-            color: #444;
-            font-weight: 500;
-            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--neutral-700);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .label-hint {
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--neutral-400);
+            font-size: 12px;
+        }
+
+        .day-badge {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         input[type="datetime-local"],
         input[type="number"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid var(--neutral-200);
+            border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            color: var(--neutral-800);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--neutral-50);
         }
 
         input[type="datetime-local"]:focus,
         input[type="number"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: white;
+        }
+
+        input[type="datetime-local"]:hover,
+        input[type="number"]:hover {
+            border-color: var(--neutral-300);
         }
 
         /* Hide spinner controls on number input */
@@ -81,119 +185,18 @@
             -moz-appearance: textfield;
         }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .results {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            display: none;
-        }
-
-        .results.show {
-            display: block;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-item {
-            margin-bottom: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .result-value {
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .status.under {
-            background: #d4edda;
-            color: #155724;
-            border: 2px solid #c3e6cb;
-        }
-
-        .status.over {
-            background: #f8d7da;
-            color: #721c24;
-            border: 2px solid #f5c6cb;
-        }
-
-        .error {
-            color: #d32f2f;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .error.show {
-            display: block;
-        }
-
+        /* Usage Control Group */
         .usage-control-group {
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 12px;
+            align-items: stretch;
         }
 
         .usage-control-group input {
             flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
         }
 
         .usage-buttons {
@@ -202,76 +205,426 @@
         }
 
         .usage-btn {
-            width: 50px;
-            height: 50px;
+            width: 52px;
+            height: 52px;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 24px;
-            font-weight: bold;
+            background: var(--neutral-100);
+            color: var(--neutral-600);
+            border: 2px solid var(--neutral-200);
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 0;
         }
 
         .usage-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            background: var(--neutral-200);
+            border-color: var(--neutral-300);
+            color: var(--neutral-700);
         }
 
         .usage-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
             transform: translateY(0);
+        }
+
+        /* Error */
+        .error {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+            padding: 12px;
+            background: var(--danger-light);
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .error.show {
+            display: block;
+            animation: shake 0.4s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Results Section */
+        .results {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeSlideIn 0.4s ease-out;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status Card - The Main Attraction */
+        .status-card {
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .status-card.under {
+            background: var(--success-light);
+            border: 2px solid var(--success);
+        }
+
+        .status-card.under::before {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        }
+
+        .status-card.over {
+            background: var(--danger-light);
+            border: 2px solid var(--danger);
+        }
+
+        .status-card.over::before {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        }
+
+        .status-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .status-card.under .status-label {
+            color: var(--success-dark);
+        }
+
+        .status-card.over .status-label {
+            color: var(--danger-dark);
+        }
+
+        .status-value {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .status-card.under .status-value {
+            color: var(--success-dark);
+        }
+
+        .status-card.over .status-value {
+            color: var(--danger-dark);
+        }
+
+        .status-hint {
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .status-card.under .status-hint {
+            color: #047857;
+        }
+
+        .status-card.over .status-hint {
+            color: #b91c1c;
+        }
+
+        /* Progress Comparison */
+        .progress-comparison {
+            background: var(--neutral-100);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .progress-row {
+            margin-bottom: 16px;
+        }
+
+        .progress-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .progress-value {
+            font-size: 14px;
+            color: var(--neutral-800);
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: var(--neutral-200);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.6s ease-out;
+        }
+
+        .progress-fill.time {
+            background: linear-gradient(90deg, var(--neutral-400) 0%, var(--neutral-500) 100%);
+        }
+
+        .progress-fill.usage {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        .progress-fill.usage.danger {
+            background: linear-gradient(90deg, var(--danger) 0%, #dc2626 100%);
+        }
+
+        /* Difference Display */
+        .difference-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--neutral-200);
+        }
+
+        .difference-label {
+            font-size: 12px;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .difference-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .difference-value.positive {
+            color: var(--danger);
+        }
+
+        .difference-value.negative {
+            color: var(--success);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 16px 32px 24px;
+            border-top: 1px solid var(--neutral-100);
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--neutral-400);
+        }
+
+        .footer-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                border-radius: 16px;
+            }
+
+            .hero {
+                padding: 24px 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 24px 20px 28px;
+            }
+
+            .usage-control-group {
+                flex-direction: column;
+            }
+
+            .usage-buttons {
+                justify-content: center;
+            }
+
+            .usage-btn {
+                flex: 1;
+                width: auto;
+                min-width: 60px;
+            }
+
+            .status-value {
+                font-size: 36px;
+            }
+
+            .progress-comparison {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Claude Usage Monitor</h1>
-        <p class="subtitle">Track your weekly Claude usage rate</p>
-
-        <form id="usageForm">
-            <div class="form-group">
-                <label for="resetTime">Next Weekly Reset Date & Time <span id="dayName" style="color: #667eea; font-weight: 600;"></span></label>
-                <input type="datetime-local" id="resetTime" required>
+        <div class="hero">
+            <div class="hero-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
             </div>
+            <h1>Are You Under or Over?</h1>
+            <p class="subtitle">Check if your <strong>Claude usage</strong> is pacing within your weekly limit</p>
+        </div>
 
-            <div class="form-group">
-                <label for="currentUsage">Current Usage (%)</label>
-                <div class="usage-control-group">
-                    <input type="number" id="currentUsage" min="0" max="100" step="1" placeholder="e.g., 45" required>
-                    <div class="usage-buttons">
-                        <button type="button" class="usage-btn" id="decreaseBtn">−</button>
-                        <button type="button" class="usage-btn" id="increaseBtn">+</button>
+        <div class="content">
+            <form id="usageForm">
+                <div class="form-group">
+                    <label for="resetTime">
+                        Next Reset
+                        <span id="dayName" class="day-badge" style="display: none;"></span>
+                    </label>
+                    <input type="datetime-local" id="resetTime" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="currentUsage">
+                        Current Usage
+                        <span class="label-hint">from Claude settings</span>
+                    </label>
+                    <div class="usage-control-group">
+                        <input type="number" id="currentUsage" min="0" max="100" step="1" placeholder="0" required>
+                        <div class="usage-buttons">
+                            <button type="button" class="usage-btn" id="decreaseBtn" aria-label="Decrease">−</button>
+                            <button type="button" class="usage-btn" id="increaseBtn" aria-label="Increase">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Check Status</button>
+                <div class="error" id="error"></div>
+            </form>
+
+            <div class="results" id="results">
+                <div class="status-card" id="statusCard">
+                    <div class="status-label">You are</div>
+                    <div class="status-value" id="status">-</div>
+                    <div class="status-hint" id="statusHint"></div>
+                </div>
+
+                <div class="progress-comparison">
+                    <div class="progress-row">
+                        <div class="progress-header">
+                            <span class="progress-label">Time Elapsed</span>
+                            <span class="progress-value" id="timeElapsed">-</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill time" id="timeBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-row">
+                        <div class="progress-header">
+                            <span class="progress-label">Usage</span>
+                            <span class="progress-value" id="displayUsage">-</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill usage" id="usageBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="difference-display">
+                        <span class="difference-label">Difference</span>
+                        <span class="difference-value" id="difference">-</span>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <button type="submit">Calculate</button>
-            <div class="error" id="error"></div>
-        </form>
-
-        <div class="results" id="results">
-            <div class="result-item">
-                <div class="result-label">Time Elapsed</div>
-                <div class="result-value" id="timeElapsed">-</div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Current Usage</div>
-                <div class="result-value" id="displayUsage">-</div>
-            </div>
-
-            <div class="result-item">
-                <div class="result-label">Difference</div>
-                <div class="result-value" id="difference">-</div>
-            </div>
-
-            <div class="status" id="status">-</div>
+        <div class="footer">
+            <p class="footer-text">Made for Claude users who like to pace themselves</p>
         </div>
     </div>
 
@@ -285,9 +638,10 @@
                 const date = new Date(resetTimeInput);
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const dayName = days[date.getDay()];
-                dayNameSpan.textContent = '(' + dayName + ')';
+                dayNameSpan.textContent = dayName;
+                dayNameSpan.style.display = 'inline';
             } else {
-                dayNameSpan.textContent = '';
+                dayNameSpan.style.display = 'none';
             }
         }
 
@@ -313,7 +667,7 @@
                 e.preventDefault();
                 const input = document.getElementById('currentUsage');
                 let value = parseFloat(input.value) || 0;
-                value = Math.min(value + 1, 100); // Increment by 1, max 100
+                value = Math.min(value + 1, 100);
                 input.value = value;
             });
 
@@ -321,7 +675,7 @@
                 e.preventDefault();
                 const input = document.getElementById('currentUsage');
                 let value = parseFloat(input.value) || 0;
-                value = Math.max(value - 1, 0); // Decrement by 1, min 0
+                value = Math.max(value - 1, 0);
                 input.value = value;
             });
         });
@@ -361,13 +715,10 @@
             localStorage.setItem('claudeUsageCurrentUsage', currentUsage.toString());
 
             // Calculate time elapsed
-            const weekDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-            // Calculate previous reset (7 days before next reset)
+            const weekDuration = 7 * 24 * 60 * 60 * 1000;
             const previousReset = new Date(resetTime.getTime() - weekDuration);
             const timeSinceReset = now - previousReset;
             const timeElapsedPercentage = (timeSinceReset / weekDuration) * 100;
-
-            // Ensure we don't go over 100% (in case we're somehow past the next reset)
             const cappedTimeElapsed = Math.min(timeElapsedPercentage, 100);
 
             // Calculate difference
@@ -376,17 +727,38 @@
             // Determine status
             const isUnder = difference < 0;
             const statusText = isUnder ? 'UNDER' : 'OVER';
-            const statusClass = isUnder ? 'under' : 'over';
 
             // Display results
-            document.getElementById('timeElapsed').textContent = cappedTimeElapsed.toFixed(2) + '%';
-            document.getElementById('displayUsage').textContent = currentUsage.toFixed(2) + '%';
-            document.getElementById('difference').textContent =
-                (difference >= 0 ? '+' : '') + difference.toFixed(2) + '%';
+            document.getElementById('timeElapsed').textContent = cappedTimeElapsed.toFixed(1) + '%';
+            document.getElementById('displayUsage').textContent = currentUsage.toFixed(1) + '%';
 
-            const statusDiv = document.getElementById('status');
-            statusDiv.textContent = statusText;
-            statusDiv.className = 'status ' + statusClass;
+            const diffElement = document.getElementById('difference');
+            diffElement.textContent = (difference >= 0 ? '+' : '') + difference.toFixed(1) + '%';
+            diffElement.className = 'difference-value ' + (difference >= 0 ? 'positive' : 'negative');
+
+            // Update status card
+            const statusCard = document.getElementById('statusCard');
+            const statusValue = document.getElementById('status');
+            const statusHint = document.getElementById('statusHint');
+
+            statusValue.textContent = statusText;
+            statusCard.className = 'status-card ' + (isUnder ? 'under' : 'over');
+
+            if (isUnder) {
+                const buffer = Math.abs(difference).toFixed(1);
+                statusHint.textContent = `You have ${buffer}% buffer remaining`;
+            } else {
+                const overBy = difference.toFixed(1);
+                statusHint.textContent = `You're ${overBy}% ahead of pace`;
+            }
+
+            // Update progress bars
+            setTimeout(() => {
+                document.getElementById('timeBar').style.width = cappedTimeElapsed + '%';
+                const usageBar = document.getElementById('usageBar');
+                usageBar.style.width = currentUsage + '%';
+                usageBar.className = 'progress-fill usage' + (isUnder ? '' : ' danger');
+            }, 50);
 
             // Show results
             document.getElementById('results').classList.add('show');
