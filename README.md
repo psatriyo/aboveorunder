@@ -1,14 +1,14 @@
 # Above or Under
 
-A lightweight, single-page web tool to help Claude subscribers check whether their weekly usage is pacing **under** or **over** their plan limit.
+A lightweight, single-page web tool to help anyone track whether their weekly AI usage is pacing **under** or **over** their plan limit.
 
 ## What this project does
 
 Given:
-- your **current usage %** (from Claude settings)
-- your **next weekly reset date/time**
+- your **current usage %** (from your AI provider dashboard)
+- your **current weekly cycle start date/time**
 
-it estimates how much of the current 7-day cycle has elapsed, compares that against usage, and tells you if you are:
+it estimates how much of the current 7-day cycle has elapsed, compares that against your usage, and tells you if you are:
 - **UNDER** pace (you still have buffer), or
 - **OVER** pace (you are consuming faster than time elapsed).
 
@@ -25,23 +25,16 @@ it estimates how much of the current 7-day cycle has elapsed, compares that agai
 
 ## Project structure
 
-- `index.html` — current polished UI with:
-  - improved visual design
-  - reset-day badge
-  - quick +/- usage controls
-  - localStorage persistence for last inputs
-  - progress bars for time vs usage
-- `claude-usage-monitor.html` — earlier/simpler version of the calculator
-- `CNAME` — custom domain config for GitHub Pages
+- `index.html` — single-page usage pacing calculator
 
 ---
 
 ## How the calculation works
 
 1. Treat one cycle as **7 days**.
-2. Infer the previous reset by subtracting 7 days from the provided next reset.
+2. Use the provided cycle start time as the beginning of the current 7-day usage window.
 3. Compute:
-   - `timeElapsed% = (now - previousReset) / 7 days * 100`
+   - `timeElapsed% = (now - cycleStart) / 7 days * 100`
 4. Compare with `currentUsage%`:
    - `difference = currentUsage% - timeElapsed%`
 5. Result:
@@ -69,10 +62,10 @@ This repo is GitHub Pages friendly (static files only).
 
 - Push to the publishing branch (commonly `main`)
 - Ensure Pages is enabled in repository settings
-- Custom domain is controlled via `CNAME`
+- (Optional) Add a `CNAME` file only if you use a custom domain
 
 ---
 
 ## Notes
 
-This tool is for pacing guidance only and depends on manual entry of your current Claude usage percentage.
+This tool is provider-agnostic and for pacing guidance only. It depends on manually entering your current usage percentage from whichever AI service you use.
