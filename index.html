@@ -70,6 +70,52 @@
             border-color: #667eea;
         }
 
+        .usage-stepper {
+            display: grid;
+            grid-template-columns: 56px 1fr 56px;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .usage-stepper input[type="number"] {
+            text-align: center;
+            min-height: 56px;
+        }
+
+        .usage-stepper input[type="number"]::-webkit-outer-spin-button,
+        .usage-stepper input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .usage-stepper input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .usage-stepper-btn {
+            min-width: 56px;
+            min-height: 56px;
+            padding: 0;
+            margin-top: 0;
+            border-radius: 12px;
+            font-size: 28px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .usage-stepper-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .usage-stepper-btn:focus-visible {
+            outline: 3px solid rgba(102, 126, 234, 0.35);
+            outline-offset: 2px;
+        }
+
         .usage-mode-toggle {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -238,7 +284,11 @@
                     <button type="button" class="usage-mode-btn" data-mode="remaining" aria-pressed="false">Remaining usage</button>
                 </div>
                 <p class="usage-mode-description" id="usageModeDescription">Enter the percentage you have already used, from 0 to 100.</p>
-                <input type="number" id="usageValue" min="0" max="100" step="0.1" placeholder="e.g., 45.5" required>
+                <div class="usage-stepper">
+                    <button type="button" class="usage-stepper-btn" data-step="-1" aria-label="Decrease usage percentage">−</button>
+                    <input type="number" id="usageValue" min="0" max="100" step="0.1" inputmode="decimal" placeholder="e.g., 45.5" required>
+                    <button type="button" class="usage-stepper-btn" data-step="1" aria-label="Increase usage percentage">+</button>
+                </div>
             </div>
 
             <button type="submit">Calculate</button>
@@ -268,6 +318,7 @@
     <script>
         const usageInput = document.getElementById('usageValue');
         const usageModeButtons = document.querySelectorAll('.usage-mode-btn');
+        const usageStepperButtons = document.querySelectorAll('.usage-stepper-btn');
         let usageInputMode = 'current';
 
         function clampUsage(value) {
@@ -298,6 +349,15 @@
 
         function formatInputValue(value) {
             return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        }
+
+        function stepUsageValue(direction) {
+            const currentValue = parseFloat(usageInput.value);
+            const baseValue = isNaN(currentValue) ? 0 : currentValue;
+            const nextValue = clampUsage(Math.round((baseValue + direction) * 10) / 10);
+            usageInput.value = formatInputValue(nextValue);
+            usageInput.dispatchEvent(new Event('input', { bubbles: true }));
+            usageInput.focus();
         }
 
         function updateUsageMode(mode) {
@@ -332,6 +392,12 @@
         usageModeButtons.forEach(button => {
             button.addEventListener('click', function() {
                 updateUsageMode(button.dataset.mode);
+            });
+        });
+
+        usageStepperButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                stepUsageValue(Number(button.dataset.step));
             });
         });
 
