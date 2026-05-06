@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Usage Monitor</title>
+    <title>AI Usage Limit Monitor</title>
     <style>
         * {
             margin: 0;
@@ -178,12 +178,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>Claude Usage Monitor</h1>
-        <p class="subtitle">Track your weekly Claude usage rate</p>
+        <h1>AI Usage Limit Monitor</h1>
+        <p class="subtitle">Track your weekly AI usage against any provider limit</p>
 
         <form id="usageForm">
             <div class="form-group">
-                <label for="resetTime">Weekly Limit Reset Date & Time</label>
+                <label for="resetTime">Current Cycle Start Date & Time</label>
                 <input type="datetime-local" id="resetTime" required>
             </div>
 
@@ -238,7 +238,7 @@
             }
 
             if (resetTime >= now) {
-                showError('Reset time must be in the past (the start of the current week).');
+                showError('Cycle start time must be in the past.');
                 return;
             }
 
