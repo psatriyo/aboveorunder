@@ -70,6 +70,50 @@
             border-color: #667eea;
         }
 
+        .usage-mode-toggle {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            padding: 4px;
+            margin-bottom: 10px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .usage-mode-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 0;
+            background: transparent;
+            color: #666;
+            border: none;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        .usage-mode-btn:hover {
+            transform: none;
+            box-shadow: none;
+            background: #fff;
+            color: #333;
+        }
+
+        .usage-mode-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .usage-mode-description {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
         button {
             width: 100%;
             padding: 14px;
@@ -188,8 +232,13 @@
             </div>
 
             <div class="form-group">
-                <label for="currentUsage">Current Usage (%)</label>
-                <input type="number" id="currentUsage" min="0" max="100" step="0.1" placeholder="e.g., 45.5" required>
+                <label for="usageValue" id="usageInputLabel">Current Usage (%)</label>
+                <div class="usage-mode-toggle" role="group" aria-label="Usage input mode">
+                    <button type="button" class="usage-mode-btn active" data-mode="current" aria-pressed="true">Current usage</button>
+                    <button type="button" class="usage-mode-btn" data-mode="remaining" aria-pressed="false">Remaining usage</button>
+                </div>
+                <p class="usage-mode-description" id="usageModeDescription">Enter the percentage you have already used, from 0 to 100.</p>
+                <input type="number" id="usageValue" min="0" max="100" step="0.1" placeholder="e.g., 45.5" required>
             </div>
 
             <button type="submit">Calculate</button>
@@ -203,7 +252,7 @@
             </div>
 
             <div class="result-item">
-                <div class="result-label">Current Usage</div>
+                <div class="result-label">Usage Used</div>
                 <div class="result-value" id="displayUsage">-</div>
             </div>
 
@@ -217,11 +266,80 @@
     </div>
 
     <script>
+        const usageInput = document.getElementById('usageValue');
+        const usageModeButtons = document.querySelectorAll('.usage-mode-btn');
+        let usageInputMode = 'current';
+
+        function clampUsage(value) {
+            return Math.min(Math.max(value, 0), 100);
+        }
+
+        function displayValueToCurrentUsage(value, mode = usageInputMode) {
+            return mode === 'remaining' ? 100 - value : value;
+        }
+
+        function currentUsageToDisplayValue(currentUsage, mode = usageInputMode) {
+            return mode === 'remaining' ? 100 - currentUsage : currentUsage;
+        }
+
+        function getCurrentUsageFromInput() {
+            const displayValue = parseFloat(usageInput.value);
+
+            if (isNaN(displayValue)) {
+                return null;
+            }
+
+            return clampUsage(displayValueToCurrentUsage(clampUsage(displayValue)));
+        }
+
+        function formatUsage(value) {
+            return value.toFixed(2) + '%';
+        }
+
+        function formatInputValue(value) {
+            return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        }
+
+        function updateUsageMode(mode) {
+            if (usageInputMode === mode) {
+                return;
+            }
+
+            const currentUsage = getCurrentUsageFromInput();
+            usageInputMode = mode;
+
+            usageModeButtons.forEach(button => {
+                const isActive = button.dataset.mode === mode;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', isActive.toString());
+            });
+
+            if (mode === 'remaining') {
+                document.getElementById('usageInputLabel').textContent = 'Remaining Usage (%)';
+                document.getElementById('usageModeDescription').textContent = 'Enter the percentage you still have available, counting down from 100 to 0.';
+                usageInput.placeholder = 'e.g., 54.5';
+            } else {
+                document.getElementById('usageInputLabel').textContent = 'Current Usage (%)';
+                document.getElementById('usageModeDescription').textContent = 'Enter the percentage you have already used, from 0 to 100.';
+                usageInput.placeholder = 'e.g., 45.5';
+            }
+
+            if (currentUsage !== null) {
+                usageInput.value = formatInputValue(currentUsageToDisplayValue(currentUsage, mode));
+            }
+        }
+
+        usageModeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                updateUsageMode(button.dataset.mode);
+            });
+        });
+
         document.getElementById('usageForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const resetTimeInput = document.getElementById('resetTime').value;
-            const currentUsage = parseFloat(document.getElementById('currentUsage').value);
+            const displayedUsageValue = parseFloat(usageInput.value);
 
             // Clear previous error
             const errorDiv = document.getElementById('error');
@@ -242,10 +360,13 @@
                 return;
             }
 
-            if (isNaN(currentUsage) || currentUsage < 0 || currentUsage > 100) {
+            if (isNaN(displayedUsageValue) || displayedUsageValue < 0 || displayedUsageValue > 100) {
                 showError('Please enter a valid usage percentage (0-100).');
                 return;
             }
+
+            const currentUsage = displayValueToCurrentUsage(displayedUsageValue);
+            const remainingUsage = 100 - currentUsage;
 
             // Calculate time elapsed
             const weekDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
@@ -264,10 +385,12 @@
             const statusClass = isUnder ? 'under' : 'over';
 
             // Display results
-            document.getElementById('timeElapsed').textContent = cappedTimeElapsed.toFixed(2) + '%';
-            document.getElementById('displayUsage').textContent = currentUsage.toFixed(2) + '%';
+            document.getElementById('timeElapsed').textContent = formatUsage(cappedTimeElapsed);
+            document.getElementById('displayUsage').textContent = usageInputMode === 'remaining'
+                ? `${formatUsage(currentUsage)} used (${formatUsage(remainingUsage)} remaining)`
+                : formatUsage(currentUsage);
             document.getElementById('difference').textContent =
-                (difference >= 0 ? '+' : '') + difference.toFixed(2) + '%';
+                (difference >= 0 ? '+' : '') + formatUsage(difference);
 
             const statusDiv = document.getElementById('status');
             statusDiv.textContent = statusText;
