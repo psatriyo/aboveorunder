@@ -5,7 +5,7 @@ A lightweight, single-page web tool to help anyone track whether their weekly AI
 ## What this project does
 
 Given:
-- your **current usage %** (from your AI provider dashboard)
+- your usage as either **current usage %** (used so far) or **remaining usage %** (available balance)
 - your **current weekly cycle start date/time**
 
 it estimates how much of the current 7-day cycle has elapsed, compares that against your usage, and tells you if you are:
@@ -35,9 +35,11 @@ it estimates how much of the current 7-day cycle has elapsed, compares that agai
 2. Use the provided cycle start time as the beginning of the current 7-day usage window.
 3. Compute:
    - `timeElapsed% = (now - cycleStart) / 7 days * 100`
-4. Compare with `currentUsage%`:
+4. If the visitor enters remaining usage, convert it to current usage:
+   - `currentUsage% = 100 - remainingUsage%`
+5. Compare with `currentUsage%`:
    - `difference = currentUsage% - timeElapsed%`
-5. Result:
+6. Result:
    - `difference < 0` → **UNDER**
    - `difference >= 0` → **OVER**
 
@@ -68,4 +70,4 @@ This repo is GitHub Pages friendly (static files only).
 
 ## Notes
 
-This tool is provider-agnostic and for pacing guidance only. It depends on manually entering your current usage percentage from whichever AI service you use.
+This tool is provider-agnostic and for pacing guidance only. It depends on manually entering either your current usage percentage or your remaining usage percentage from whichever AI service you use.
