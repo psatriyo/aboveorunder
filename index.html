@@ -191,6 +191,24 @@
             color-scheme: light dark;
         }
 
+        /* iOS Safari gives date inputs an intrinsic min-width that ignores width: 100%. */
+        input[type="datetime-local"] {
+            display: block;
+            min-width: 0;
+            max-width: 100%;
+            min-height: 50px;
+            -webkit-appearance: none;
+            appearance: none;
+            text-align: left;
+        }
+
+        input[type="datetime-local"]::-webkit-date-and-time-value {
+            text-align: left;
+            margin: 0;
+        }
+
+        .field { min-width: 0; }
+
         input[type="datetime-local"]:focus,
         input[type="number"]:focus {
             outline: none;
@@ -575,10 +593,14 @@
             <form id="usageForm" novalidate>
                 <div class="field">
                     <div class="field-head">
-                        <label for="resetTime">Cycle start</label>
-                        <button type="button" class="link-btn" id="useNowBtn" title="Set the cycle start to right now">Reset just now</button>
+                        <label for="resetTime" id="resetLabel">Cycle start</label>
+                        <button type="button" class="link-btn" id="useNowBtn" title="My usage window reset just now">Reset just now</button>
                     </div>
-                    <input type="datetime-local" id="resetTime">
+                    <div class="segmented" id="dateModeToggle" role="group" aria-label="Cycle date type">
+                        <button type="button" class="active" data-mode="start" aria-pressed="true">Cycle start</button>
+                        <button type="button" data-mode="end" aria-pressed="false">Cycle end</button>
+                    </div>
+                    <input type="datetime-local" id="resetTime" aria-describedby="cycleHint">
                     <p class="hint" id="cycleHint">When your current 7-day usage window began. It repeats weekly, so you only need to enter it once.</p>
                     <div class="notice" id="rolloverNotice" role="status"></div>
                     <div class="error" id="resetError" role="alert"></div>
@@ -588,7 +610,7 @@
                     <div class="field-head">
                         <span class="label" id="usageInputLabel">Usage used</span>
                     </div>
-                    <div class="segmented" role="group" aria-label="Usage input mode">
+                    <div class="segmented" id="usageModeToggle" role="group" aria-label="Usage input mode">
                         <button type="button" class="active" data-mode="current" aria-pressed="true">Used so far</button>
                         <button type="button" data-mode="remaining" aria-pressed="false">Remaining</button>
                     </div>
@@ -614,7 +636,7 @@
                 <div class="empty-icon" aria-hidden="true">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                 </div>
-                Enter your cycle start and usage above.<br>Your pace updates live as you type.
+                Enter your cycle date and usage above.<br>Your pace updates live as you type.
             </div>
 
             <div class="results" id="results">
@@ -688,10 +710,23 @@
         const resetInput = $('resetTime');
         const usageInput = $('usageValue');
         const usageSlider = $('usageSlider');
-        const modeButtons = document.querySelectorAll('.segmented button');
+        const modeButtons = document.querySelectorAll('#usageModeToggle button');
+        const dateModeButtons = document.querySelectorAll('#dateModeToggle button');
         const stepButtons = document.querySelectorAll('.step-btn');
 
         let usageInputMode = 'current';
+        let dateInputMode = 'start';
+
+        const DATE_MODE_COPY = {
+            start: {
+                label: 'Cycle start',
+                hint: 'When your current 7-day usage window began (your last reset). It repeats weekly, so you only need to enter it once.'
+            },
+            end: {
+                label: 'Cycle end',
+                hint: 'When your current 7-day usage window resets next, as many providers show it. It repeats weekly, so you only need to enter it once.'
+            }
+        };
 
         // ---------- Helpers ----------
         function clampUsage(value) {
@@ -736,6 +771,7 @@
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
                     resetTime: resetInput.value,
+                    dateMode: dateInputMode,
                     mode: usageInputMode,
                     usage: usageInput.value
                 }));
@@ -793,6 +829,35 @@
             onInputChange();
         }
 
+        function updateResetMax(now = new Date()) {
+            // A start must be in the past; an end can be at most one week ahead.
+            resetInput.max = toLocalInputValue(dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now);
+        }
+
+        function updateDateMode(mode) {
+            if (dateInputMode === mode) return;
+
+            const previous = resetInput.value ? new Date(resetInput.value) : null;
+            dateInputMode = mode;
+
+            dateModeButtons.forEach(button => {
+                const isActive = button.dataset.mode === mode;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+
+            $('resetLabel').textContent = DATE_MODE_COPY[mode].label;
+            $('cycleHint').textContent = DATE_MODE_COPY[mode].hint;
+            updateResetMax();
+
+            // Shift the date by a week so it still describes the same cycle.
+            if (previous && !isNaN(previous.getTime())) {
+                const shift = mode === 'end' ? WEEK_MS : -WEEK_MS;
+                resetInput.value = toLocalInputValue(new Date(previous.getTime() + shift));
+            }
+            onInputChange();
+        }
+
         // ---------- Core calculation ----------
         function compute(now = new Date()) {
             const resetError = $('resetError');
@@ -806,25 +871,37 @@
 
             let valid = true;
 
-            // Cycle start
+            // Cycle start (entered directly, or derived from the cycle end)
             let cycleStart = null;
             if (resetInput.value) {
                 const parsed = new Date(resetInput.value);
+                const isEnd = dateInputMode === 'end';
+                const anchorStart = isEnd ? new Date(parsed.getTime() - WEEK_MS) : parsed;
                 if (isNaN(parsed.getTime())) {
                     showFieldError(resetInput, resetError, 'Please enter a valid date and time.');
                     valid = false;
-                } else if (parsed > now) {
-                    showFieldError(resetInput, resetError, 'Cycle start must be in the past.');
+                } else if (anchorStart > now) {
+                    showFieldError(resetInput, resetError, isEnd
+                        ? 'Cycle end must be within the next 7 days.'
+                        : 'Cycle start must be in the past.');
                     valid = false;
                 } else {
-                    // Weekly cycles repeat: roll an old start date forward to the current window.
-                    const cyclesPassed = Math.floor((now - parsed) / WEEK_MS);
-                    cycleStart = new Date(parsed.getTime() + cyclesPassed * WEEK_MS);
+                    // Weekly cycles repeat: roll an old date forward to the current window.
+                    const cyclesPassed = Math.floor((now - anchorStart) / WEEK_MS);
+                    cycleStart = new Date(anchorStart.getTime() + cyclesPassed * WEEK_MS);
+                    const cycleEnd = new Date(cycleStart.getTime() + WEEK_MS);
                     if (cyclesPassed > 0) {
-                        notice.innerHTML = `That date is ${cyclesPassed} week${cyclesPassed > 1 ? 's' : ''} ago, so your cycle has reset since. Using the current cycle that started <strong>${formatDateTime(cycleStart)}</strong>. <button type="button" class="link-btn" id="applyRollover">Update date</button>`;
+                        const weeksAgo = isEnd ? cyclesPassed - 1 : cyclesPassed;
+                        const when = weeksAgo === 0
+                            ? 'That date has passed'
+                            : `That date is ${weeksAgo} week${weeksAgo > 1 ? 's' : ''} ago`;
+                        const current = isEnd
+                            ? `ends <strong>${formatDateTime(cycleEnd)}</strong>`
+                            : `started <strong>${formatDateTime(cycleStart)}</strong>`;
+                        notice.innerHTML = `${when}, so your cycle has reset since. Using the current cycle that ${current}. <button type="button" class="link-btn" id="applyRollover">Update date</button>`;
                         notice.classList.add('show');
                         $('applyRollover').addEventListener('click', () => {
-                            resetInput.value = toLocalInputValue(cycleStart);
+                            resetInput.value = toLocalInputValue(isEnd ? cycleEnd : cycleStart);
                             onInputChange();
                         });
                     }
@@ -976,6 +1053,10 @@
             button.addEventListener('click', () => updateUsageMode(button.dataset.mode));
         });
 
+        dateModeButtons.forEach(button => {
+            button.addEventListener('click', () => updateDateMode(button.dataset.mode));
+        });
+
         stepButtons.forEach(button => {
             button.addEventListener('click', () => {
                 stepUsageValue(Number(button.dataset.step));
@@ -993,7 +1074,8 @@
         resetInput.addEventListener('change', onInputChange);
 
         $('useNowBtn').addEventListener('click', () => {
-            resetInput.value = toLocalInputValue(new Date());
+            const now = new Date();
+            resetInput.value = toLocalInputValue(dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now);
             onInputChange();
         });
 
@@ -1005,18 +1087,19 @@
         // Restore saved state
         const saved = loadState();
         if (saved) {
+            if (saved.dateMode === 'end') updateDateMode('end');
             if (saved.resetTime) resetInput.value = saved.resetTime;
             if (saved.mode === 'remaining') updateUsageMode('remaining');
             if (saved.usage !== undefined) usageInput.value = saved.usage;
             saveState();
         }
-        resetInput.max = toLocalInputValue(new Date());
+        updateResetMax();
         syncSlider();
         compute();
 
         // Keep results fresh as time passes
         setInterval(() => {
-            resetInput.max = toLocalInputValue(new Date());
+            updateResetMax();
             compute();
         }, 60 * 1000);
         document.addEventListener('visibilitychange', () => {

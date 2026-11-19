@@ -6,7 +6,7 @@ A lightweight, single-page web tool to help anyone track whether their weekly AI
 
 Given:
 - your usage as either **current usage %** (used so far) or **remaining usage %** (available balance)
-- your **current weekly cycle start date/time**
+- your current weekly cycle as either its **start date/time** (last reset) or its **end date/time** (next reset, as many providers show it)
 
 it estimates how much of the current 7-day cycle has elapsed, compares that against your usage, and tells you if you are:
 - **UNDER** pace (you still have buffer), or
@@ -15,8 +15,8 @@ it estimates how much of the current 7-day cycle has elapsed, compares that agai
 ### Features
 
 - **Live results:** the pace updates as you type and refreshes every minute.
-- **Remembers your inputs:** cycle start, input mode and usage are saved in your browser (localStorage), so you can check again later without retyping.
-- **Rolls the weekly cycle forward:** if the start date you saved is more than 7 days old, the tool uses the current cycle automatically and offers to update the date.
+- **Remembers your inputs:** cycle date, date and usage input modes, and usage are saved in your browser (localStorage), so you can check again later without retyping.
+- **Rolls the weekly cycle forward:** if the date you saved belongs to a cycle that has already ended, the tool uses the current cycle automatically and offers to update the date.
 - **Visual pace comparison:** a "week elapsed" bar next to a "usage used" bar, with a tick for where even pace would be.
 - **Actionable stats:**
   - **Difference:** usage % minus time %, also shown as time (e.g. "≈ 16h over pace").
@@ -45,7 +45,7 @@ it estimates how much of the current 7-day cycle has elapsed, compares that agai
 ## How the calculation works
 
 1. Treat one cycle as **7 days**.
-2. Use the provided cycle start time as the beginning of the current 7-day usage window. If it is more than 7 days ago, roll it forward by whole weeks to the current window.
+2. Use the provided cycle start time (or the cycle end time minus 7 days) as the beginning of the current 7-day usage window. If it is more than 7 days ago, roll it forward by whole weeks to the current window.
 3. Compute:
    - `timeElapsed% = (now - cycleStart) / 7 days * 100`
 4. If the visitor enters remaining usage, convert it to current usage:
