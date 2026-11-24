@@ -17,7 +17,8 @@ it works out how much of the current 7-day cycle has elapsed, compares that agai
 
 - **Live results:** the pace updates as you change inputs and refreshes on every clock minute.
 - **Set it once:** a weekly reset repeats, so any weekday and time maps onto the current cycle automatically.
-- **Remembers your inputs:** reset, input modes and usage are saved in your browser (localStorage). When everything is filled in, the results show first on your next visit.
+- **Remembers your inputs:** reset, input modes and usage are saved in your browser (localStorage).
+- **Ordered by how often you touch it:** usage at the top, your pace right below it so the verdict updates as you adjust, and the rarely changed weekly reset and "used / remaining" setting at the bottom.
 - **One pace bar:** usage drawn over the elapsed part of the week, with a tick at even pace and the cycle's weekdays below.
 - **Actionable stats:**
   - **Resets in:** countdown to the next reset and its date.
