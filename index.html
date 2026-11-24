@@ -280,6 +280,8 @@
             border-radius: 12px;
         }
 
+        .field > .segmented:last-child { margin-bottom: 0; }
+
         .segmented button {
             padding: 9px 10px;
             border: none;
@@ -471,6 +473,11 @@
             place-items: center;
             background: var(--accent-soft);
             color: var(--accent);
+        }
+
+        .empty a {
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .results { animation: rise 0.35s ease-out; }
@@ -670,6 +677,10 @@
             .stat-value { font-size: 18px; }
         }
 
+        @media (prefers-reduced-motion: no-preference) {
+            html { scroll-behavior: smooth; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; transition: none !important; }
         }
@@ -695,72 +706,19 @@
             </div>
         </header>
 
-        <section class="card" id="inputsCard" aria-labelledby="inputsTitle">
-            <h2 class="card-title" id="inputsTitle" data-i18n="cycleTitle">Your cycle</h2>
-
-            <div class="field">
-                <div class="field-head">
-                    <span class="label" id="resetLabel" data-i18n="resetLabel">Weekly reset</span>
-                    <button type="button" class="link-btn" id="useNowBtn" data-i18n="resetNow" data-i18n-attr="title:resetNowTitle">Reset just now</button>
-                    <span class="reset-confirm" id="resetConfirm" role="group" aria-labelledby="resetConfirmText">
-                        <span id="resetConfirmText" data-i18n="resetConfirmQ">Reset to now?</span>
-                        <button type="button" class="confirm-btn" id="resetConfirmYes" data-i18n="confirm">Confirm</button>
-                        <button type="button" class="link-btn" id="resetConfirmNo" data-i18n="cancel">Cancel</button>
-                    </span>
-                </div>
-                <div class="segmented" id="dateModeToggle" role="group" data-i18n-attr="aria-label:dateTypeAria">
-                    <button type="button" data-value="day" aria-pressed="true" data-i18n="modeDay">Day &amp; time</button>
-                    <button type="button" data-value="in" aria-pressed="false" data-i18n="modeIn">Resets in</button>
-                </div>
-
-                <div id="dayInput">
-                    <div class="weekdays" id="weekdayChips" role="group" data-i18n-attr="aria-label:weekdayAria"></div>
-                    <div class="step-row">
-                        <span class="step-row-label" data-i18n="stepTime">Time</span>
-                        <button type="button" class="step-btn" data-step="time" data-dir="-1" data-i18n-attr="aria-label:timePrev">−</button>
-                        <div class="step-value num" id="timeValue">—</div>
-                        <button type="button" class="step-btn" data-step="time" data-dir="1" data-i18n-attr="aria-label:timeNext">+</button>
-                    </div>
-                </div>
-
-                <div class="step-rows" id="inInput" hidden>
-                    <div class="step-row">
-                        <span class="step-row-label" data-i18n="stepDays">Days</span>
-                        <button type="button" class="step-btn" data-step="days" data-dir="-1" data-i18n-attr="aria-label:daysPrev">−</button>
-                        <div class="step-value num" id="daysValue">—</div>
-                        <button type="button" class="step-btn" data-step="days" data-dir="1" data-i18n-attr="aria-label:daysNext">+</button>
-                    </div>
-                    <div class="step-row">
-                        <span class="step-row-label" data-i18n="stepHours">Hours</span>
-                        <button type="button" class="step-btn" data-step="hours" data-dir="-1" data-i18n-attr="aria-label:hoursPrev">−</button>
-                        <div class="step-value num" id="hoursValue">—</div>
-                        <button type="button" class="step-btn" data-step="hours" data-dir="1" data-i18n-attr="aria-label:hoursNext">+</button>
-                    </div>
-                </div>
-
-                <p class="hint" id="cycleSummary" aria-live="polite"></p>
+        <section class="card" id="usageCard" aria-labelledby="usageLabel">
+            <h2 class="card-title" id="usageLabel">Usage used</h2>
+            <div class="usage-stepper">
+                <button type="button" class="step-btn" data-step="usage" data-dir="-1" data-i18n-attr="aria-label:decrease">−</button>
+                <button type="button" class="usage-display num" id="usageDisplay" aria-describedby="usageDesc">—</button>
+                <input type="number" class="usage-edit num" id="usageEdit" min="0" max="100" step="1" inputmode="numeric" aria-labelledby="usageLabel" aria-describedby="usageDesc" hidden>
+                <button type="button" class="step-btn" data-step="usage" data-dir="1" data-i18n-attr="aria-label:increase">+</button>
             </div>
-
-            <div class="field">
-                <div class="field-head">
-                    <span class="label" id="usageLabel">Usage used</span>
-                </div>
-                <div class="segmented" id="usageModeToggle" role="group" data-i18n-attr="aria-label:usageModeAria">
-                    <button type="button" data-value="current" aria-pressed="true" data-i18n="usedSoFar">Used so far</button>
-                    <button type="button" data-value="remaining" aria-pressed="false" data-i18n="remaining">Remaining</button>
-                </div>
-                <div class="usage-stepper">
-                    <button type="button" class="step-btn" data-step="usage" data-dir="-1" data-i18n-attr="aria-label:decrease">−</button>
-                    <button type="button" class="usage-display num" id="usageDisplay" aria-describedby="usageDesc">—</button>
-                    <input type="number" class="usage-edit num" id="usageEdit" min="0" max="100" step="1" inputmode="numeric" aria-labelledby="usageLabel" aria-describedby="usageDesc" hidden>
-                    <button type="button" class="step-btn" data-step="usage" data-dir="1" data-i18n-attr="aria-label:increase">+</button>
-                </div>
-                <div class="slider-wrap">
-                    <input type="range" id="usageSlider" min="0" max="100" step="1" value="0" aria-labelledby="usageLabel">
-                    <div class="slider-scale" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
-                </div>
-                <p class="hint" id="usageDesc"></p>
+            <div class="slider-wrap">
+                <input type="range" id="usageSlider" min="0" max="100" step="1" value="0" aria-labelledby="usageLabel">
+                <div class="slider-scale" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
             </div>
+            <p class="hint" id="usageDesc" hidden></p>
         </section>
 
         <section class="card" id="resultsCard" aria-labelledby="resultsTitle">
@@ -770,7 +728,7 @@
                 <div class="empty-icon" aria-hidden="true">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                 </div>
-                <span data-i18n-html="emptyState">Set your weekly reset and usage above.<br>Your pace updates live.</span>
+                <span id="emptyText">Set your usage above and your weekly reset below.</span>
             </div>
 
             <div class="results" id="results" hidden>
@@ -819,6 +777,63 @@
             </div>
 
             <p class="sr-only" id="srVerdict" aria-live="polite"></p>
+        </section>
+
+        <section class="card" id="cycleCard" aria-labelledby="cycleTitle">
+            <h2 class="card-title" id="cycleTitle" data-i18n="cycleTitle">Your cycle</h2>
+
+            <div class="field">
+                <div class="field-head">
+                    <span class="label" id="resetLabel" data-i18n="resetLabel">Weekly reset</span>
+                    <button type="button" class="link-btn" id="useNowBtn" data-i18n="resetNow" data-i18n-attr="title:resetNowTitle">Reset just now</button>
+                    <span class="reset-confirm" id="resetConfirm" role="group" aria-labelledby="resetConfirmText">
+                        <span id="resetConfirmText" data-i18n="resetConfirmQ">Reset to now?</span>
+                        <button type="button" class="confirm-btn" id="resetConfirmYes" data-i18n="confirm">Confirm</button>
+                        <button type="button" class="link-btn" id="resetConfirmNo" data-i18n="cancel">Cancel</button>
+                    </span>
+                </div>
+                <div class="segmented" id="dateModeToggle" role="group" data-i18n-attr="aria-label:dateTypeAria">
+                    <button type="button" data-value="day" aria-pressed="true" data-i18n="modeDay">Day &amp; time</button>
+                    <button type="button" data-value="in" aria-pressed="false" data-i18n="modeIn">Resets in</button>
+                </div>
+
+                <div id="dayInput">
+                    <div class="weekdays" id="weekdayChips" role="group" data-i18n-attr="aria-label:weekdayAria"></div>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepTime">Time</span>
+                        <button type="button" class="step-btn" data-step="time" data-dir="-1" data-i18n-attr="aria-label:timePrev">−</button>
+                        <div class="step-value num" id="timeValue">—</div>
+                        <button type="button" class="step-btn" data-step="time" data-dir="1" data-i18n-attr="aria-label:timeNext">+</button>
+                    </div>
+                </div>
+
+                <div class="step-rows" id="inInput" hidden>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepDays">Days</span>
+                        <button type="button" class="step-btn" data-step="days" data-dir="-1" data-i18n-attr="aria-label:daysPrev">−</button>
+                        <div class="step-value num" id="daysValue">—</div>
+                        <button type="button" class="step-btn" data-step="days" data-dir="1" data-i18n-attr="aria-label:daysNext">+</button>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepHours">Hours</span>
+                        <button type="button" class="step-btn" data-step="hours" data-dir="-1" data-i18n-attr="aria-label:hoursPrev">−</button>
+                        <div class="step-value num" id="hoursValue">—</div>
+                        <button type="button" class="step-btn" data-step="hours" data-dir="1" data-i18n-attr="aria-label:hoursNext">+</button>
+                    </div>
+                </div>
+
+                <p class="hint" id="cycleSummary" aria-live="polite"></p>
+            </div>
+
+            <div class="field">
+                <div class="field-head">
+                    <span class="label" id="usageModeLabel" data-i18n="usageModeLabel">Your provider shows</span>
+                </div>
+                <div class="segmented" id="usageModeToggle" role="group" aria-labelledby="usageModeLabel">
+                    <button type="button" data-value="current" aria-pressed="true" data-i18n="usedSoFar">Used so far</button>
+                    <button type="button" data-value="remaining" aria-pressed="false" data-i18n="remaining">Remaining</button>
+                </div>
+            </div>
         </section>
 
         <footer data-i18n-html="footer">
@@ -872,14 +887,15 @@
                 usageRemaining: 'Usage remaining',
                 usedSoFar: 'Used so far',
                 remaining: 'Remaining',
-                usageModeAria: 'Usage input mode',
+                usageModeLabel: 'Your provider shows',
                 decrease: 'Decrease by 1%',
                 increase: 'Increase by 1%',
                 tapToType: 'tap to type',
-                descUsed: "The percentage of your weekly limit you've already used, as shown by your AI provider.",
                 descRemaining: 'The percentage of your weekly limit you still have available, counting down from 100%.',
                 paceTitle: 'Your pace',
-                emptyState: 'Set your weekly reset and usage above.<br>Your pace updates live.',
+                emptyBoth: 'Set your usage above and your <a href="#cycleCard">weekly reset below</a>.',
+                emptyReset: 'Set your <a href="#cycleCard">weekly reset below</a> to see your pace.',
+                emptyUsage: 'Set your usage above to see your pace.',
                 weekElapsed: 'Week elapsed',
                 evenPace: 'Even pace',
                 resetsIn: 'Resets in',
@@ -934,14 +950,15 @@
                 usageRemaining: 'Sisa pemakaian',
                 usedSoFar: 'Terpakai',
                 remaining: 'Sisa',
-                usageModeAria: 'Mode input pemakaian',
+                usageModeLabel: 'Penyedia menampilkan',
                 decrease: 'Kurangi 1%',
                 increase: 'Tambah 1%',
                 tapToType: 'ketuk untuk mengetik',
-                descUsed: 'Persentase batas mingguan yang sudah kamu pakai, sesuai yang ditampilkan penyedia AI-mu.',
                 descRemaining: 'Persentase batas mingguan yang masih tersedia, menghitung mundur dari 100%.',
                 paceTitle: 'Ritmemu',
-                emptyState: 'Atur reset mingguan dan pemakaianmu di atas.<br>Ritmemu langsung diperbarui.',
+                emptyBoth: 'Atur pemakaianmu di atas dan <a href="#cycleCard">reset mingguan di bawah</a>.',
+                emptyReset: 'Atur <a href="#cycleCard">reset mingguan di bawah</a> untuk melihat ritmemu.',
+                emptyUsage: 'Atur pemakaianmu di atas untuk melihat ritmemu.',
                 weekElapsed: 'Minggu berjalan',
                 evenPace: 'Ritme merata',
                 resetsIn: 'Reset dalam',
@@ -996,14 +1013,15 @@
                 usageRemaining: 'Uso restante',
                 usedSoFar: 'Usado',
                 remaining: 'Restante',
-                usageModeAria: 'Modo de entrada de uso',
+                usageModeLabel: 'Tu proveedor muestra',
                 decrease: 'Disminuir 1%',
                 increase: 'Aumentar 1%',
                 tapToType: 'toca para escribir',
-                descUsed: 'El porcentaje de tu límite semanal que ya has usado, según lo muestra tu proveedor de IA.',
                 descRemaining: 'El porcentaje de tu límite semanal que aún tienes disponible, contando hacia atrás desde 100%.',
                 paceTitle: 'Tu ritmo',
-                emptyState: 'Indica arriba tu reinicio semanal y tu uso.<br>Tu ritmo se actualiza en vivo.',
+                emptyBoth: 'Indica tu uso arriba y tu <a href="#cycleCard">reinicio semanal abajo</a>.',
+                emptyReset: 'Indica tu <a href="#cycleCard">reinicio semanal abajo</a> para ver tu ritmo.',
+                emptyUsage: 'Indica tu uso arriba para ver tu ritmo.',
                 weekElapsed: 'Semana transcurrida',
                 evenPace: 'Ritmo uniforme',
                 resetsIn: 'Se reinicia en',
@@ -1095,8 +1113,7 @@
 
         const $ = id => document.getElementById(id);
         const els = {
-            inputsCard: $('inputsCard'),
-            resultsCard: $('resultsCard'),
+            cycleCard: $('cycleCard'),
             langSwitch: $('langSwitch'),
             dateModeToggle: $('dateModeToggle'),
             usageModeToggle: $('usageModeToggle'),
@@ -1311,7 +1328,8 @@
 
             const remainingMode = state.usageMode === 'remaining';
             setText($('usageLabel'), t(remainingMode ? 'usageRemaining' : 'usageUsed'));
-            setText($('usageDesc'), t(remainingMode ? 'descRemaining' : 'descUsed'));
+            setText($('usageDesc'), remainingMode ? t('descRemaining') : '');
+            $('usageDesc').hidden = !remainingMode;
 
             const shown = displayedUsage();
             const shownText = shown === null ? '—' : formatPct(shown, 0);
@@ -1358,10 +1376,15 @@
         }
 
         function renderResults(now, fromUser) {
-            const complete = state.start !== null && state.used !== null;
+            const hasReset = state.start !== null;
+            const hasUsage = state.used !== null;
+            const complete = hasReset && hasUsage;
             $('emptyState').hidden = complete;
             $('results').hidden = !complete;
-            if (!complete) return;
+            if (!complete) {
+                setHtml($('emptyText'), t(!hasReset && !hasUsage ? 'emptyBoth' : hasReset ? 'emptyUsage' : 'emptyReset'));
+                return;
+            }
 
             const r = computePace({ start: state.start, used: state.used, now });
             const gap = formatDuration(r.differenceMs);
@@ -1511,6 +1534,15 @@
         });
         els.usageEdit.addEventListener('blur', finishUsageEdit);
 
+        // The empty state's "weekly reset below" link scrolls to the reset and focuses its first control.
+        $('emptyState').addEventListener('click', e => {
+            if (!e.target.closest('a[href="#cycleCard"]')) return;
+            e.preventDefault();
+            els.cycleCard.scrollIntoView({ block: 'start' });
+            const target = els.dayInput.hidden ? els.cycleCard.querySelector('[data-step="days"]') : els.weekdayChips.querySelector('button');
+            target?.focus({ preventScroll: true });
+        });
+
         // "Reset just now" asks first, so a stray tap can't wipe the saved reset.
         let confirmTimer = null;
         function showResetConfirm(show) {
@@ -1547,11 +1579,6 @@
             if (saved.dateMode === 'in') state.dateMode = 'in';
             if (saved.usageMode === 'remaining') state.usageMode = 'remaining';
             if (Number.isFinite(saved.used)) state.used = Math.round(Math.min(Math.max(saved.used, 0), 100));
-        }
-
-        // Returning visitors mostly want the verdict: show it first when everything is already filled in.
-        if (state.start !== null && state.used !== null) {
-            els.inputsCard.before(els.resultsCard);
         }
 
         applyStaticText();
