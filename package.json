@@ -1,0 +1,8 @@
+{
+  "name": "aboveorunder",
+  "private": true,
+  "description": "Weekly AI usage pace checker. No dependencies; package.json only defines the test command.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
