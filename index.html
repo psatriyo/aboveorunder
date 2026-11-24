@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Check whether your weekly AI usage is pacing under or over your plan limit.">
-    <meta name="theme-color" content="#5b5bd6">
+    <meta name="theme-color" content="#f4f4fb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111118" media="(prefers-color-scheme: dark)">
     <title>Above or Under · AI Usage Pace</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235b5bd6'/%3E%3Cpath d='M9 13l7-6 7 6M9 19l7 6 7-6' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <style>
@@ -19,8 +20,8 @@
             --text-2: #5d5d72;
             --text-3: #8b8ba0;
             --accent: #5b5bd6;
-            --accent-2: #764ba2;
             --accent-soft: rgba(91, 91, 214, 0.12);
+            --accent-border: rgba(91, 91, 214, 0.35);
             --time: #8b8ba0;
             --under: #18794e;
             --under-bar: #30a46c;
@@ -35,7 +36,7 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
+            :root {
                 --bg: #111118;
                 --bg-glow-1: rgba(102, 126, 234, 0.16);
                 --bg-glow-2: rgba(118, 75, 162, 0.14);
@@ -46,8 +47,8 @@
                 --text-2: #a9a9bd;
                 --text-3: #77778c;
                 --accent: #8b8dff;
-                --accent-2: #b085e0;
                 --accent-soft: rgba(139, 141, 255, 0.16);
+                --accent-border: rgba(139, 141, 255, 0.4);
                 --time: #77778c;
                 --under: #4cc38a;
                 --under-bar: #3dd68c;
@@ -76,7 +77,18 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        [hidden] { display: none !important; }
+
         .num { font-variant-numeric: tabular-nums; }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
 
         .app {
             max-width: 560px;
@@ -84,6 +96,18 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+        }
+
+        button {
+            font: inherit;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        button:focus-visible,
+        input:focus-visible {
+            outline: 3px solid var(--accent-soft);
+            outline-offset: 2px;
         }
 
         /* ---------- Language switcher ---------- */
@@ -118,11 +142,7 @@
         }
 
         .lang-switch button:hover { color: var(--text); }
-
-        .lang-switch button.active {
-            background: var(--accent);
-            color: #fff;
-        }
+        .lang-switch button.active { background: var(--accent); color: #fff; }
 
         /* ---------- Header ---------- */
         header {
@@ -173,6 +193,8 @@
             margin-bottom: 18px;
         }
 
+        .field { min-width: 0; }
+
         .field + .field {
             margin-top: 22px;
             padding-top: 22px;
@@ -187,7 +209,7 @@
             margin-bottom: 10px;
         }
 
-        label, .label {
+        .label {
             font-weight: 600;
             font-size: 14px;
             color: var(--text);
@@ -197,102 +219,23 @@
             color: var(--text-2);
             font-size: 13px;
             line-height: 1.45;
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
         .hint strong { color: var(--text); font-weight: 600; }
 
-        .day-readout {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            color: var(--text-2);
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .day-readout.show { display: flex; }
-        .day-readout svg { flex-shrink: 0; color: var(--accent); }
-        .day-readout strong { color: var(--text); font-weight: 700; }
-
-        .notice {
-            display: none;
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: var(--accent-soft);
-            color: var(--text);
-            font-size: 13px;
-            line-height: 1.45;
-        }
-
-        .notice.show { display: block; }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            background: var(--surface-2);
-            color: var(--text);
-            font: inherit;
-            font-size: 16px;
-            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-            color-scheme: light dark;
-        }
-
-        .field { min-width: 0; }
-
-        input.invalid { border-color: var(--over); }
-
-        /* Date & time stepper: −/+ buttons instead of the native picker */
-        .date-stepper {
-            display: grid;
-            gap: 8px;
-        }
-
-        .date-row {
-            display: grid;
-            grid-template-columns: 64px 48px minmax(0, 1fr) 48px;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .date-row-label {
+        .link-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
             font-size: 13px;
             font-weight: 600;
-            color: var(--text-2);
-        }
-
-        .date-row .step-btn {
-            min-height: 46px;
-            font-size: 22px;
-        }
-
-        .step-value {
-            min-height: 46px;
-            padding: 0 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            background: var(--surface-2);
-            color: var(--text);
-            font-size: 16px;
-            font-weight: 600;
-            text-align: center;
+            padding: 2px 4px;
+            border-radius: 6px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        .date-stepper.invalid .step-value { border-color: var(--over); }
+        .link-btn:hover { text-decoration: underline; }
 
         .reset-confirm {
             display: none;
@@ -314,38 +257,6 @@
             font-size: 13px;
             font-weight: 600;
         }
-
-        @media (max-width: 420px) {
-            .date-row { grid-template-columns: 54px 44px minmax(0, 1fr) 44px; gap: 6px; }
-            .date-row .step-btn, .step-value { min-height: 44px; }
-            .step-value { font-size: 15px; padding: 0 6px; }
-            .field-head { flex-wrap: wrap; }
-        }
-
-        button {
-            font: inherit;
-            cursor: pointer;
-            color: inherit;
-        }
-
-        button:focus-visible,
-        input[type="range"]:focus-visible {
-            outline: 3px solid var(--accent-soft);
-            outline-offset: 2px;
-        }
-
-        .link-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 13px;
-            font-weight: 600;
-            padding: 2px 4px;
-            border-radius: 6px;
-            white-space: nowrap;
-        }
-
-        .link-btn:hover { text-decoration: underline; }
 
         /* Segmented toggle */
         .segmented {
@@ -378,38 +289,61 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
 
-        /* Stepper */
-        .stepper {
+        /* Weekday chips */
+        .weekdays {
             display: grid;
-            grid-template-columns: 52px 1fr 52px;
-            gap: 10px;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
+            margin-bottom: 8px;
         }
 
-        .stepper input[type="number"] {
-            text-align: center;
-            font-size: 22px;
+        .weekdays button {
+            min-height: 42px;
+            padding: 0 2px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+            color: var(--text-2);
+            font-size: 13px;
             font-weight: 600;
-            min-height: 52px;
-            -moz-appearance: textfield;
-            /* Display only: change it with −/+ or the slider, never the keyboard. */
-            pointer-events: none;
-            user-select: none;
-            -webkit-user-select: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            touch-action: manipulation;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
         }
 
-        .stepper input::-webkit-outer-spin-button,
-        .stepper input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+        .weekdays button:hover { border-color: var(--accent); color: var(--accent); }
+
+        .weekdays button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Steppers */
+        .step-rows { display: grid; gap: 8px; }
+
+        .step-row {
+            display: grid;
+            grid-template-columns: 64px 48px minmax(0, 1fr) 48px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-row-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-2);
         }
 
         .step-btn {
-            min-height: 52px;
+            min-height: 46px;
             border-radius: 12px;
             border: 1.5px solid var(--border);
             background: var(--surface-2);
             color: var(--text);
-            font-size: 24px;
+            font-size: 22px;
             line-height: 1;
             display: grid;
             place-items: center;
@@ -422,6 +356,52 @@
 
         .step-btn:hover { border-color: var(--accent); color: var(--accent); }
         .step-btn:active { transform: scale(0.96); }
+
+        .step-value,
+        .usage-display,
+        .usage-edit {
+            min-height: 46px;
+            width: 100%;
+            padding: 0 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+            color: var(--text);
+            font: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .step-value { display: flex; align-items: center; justify-content: center; }
+
+        .usage-stepper {
+            display: grid;
+            grid-template-columns: 52px 1fr 52px;
+            gap: 10px;
+        }
+
+        .usage-stepper .step-btn { min-height: 52px; font-size: 24px; }
+
+        .usage-display,
+        .usage-edit {
+            min-height: 52px;
+            font-size: 22px;
+            color-scheme: light dark;
+        }
+
+        .usage-display { cursor: text; }
+        .usage-display:hover { border-color: var(--accent); }
+        .usage-edit { border-color: var(--accent); -moz-appearance: textfield; }
+
+        .usage-edit::-webkit-outer-spin-button,
+        .usage-edit::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
         /* Range slider */
         .slider-wrap { margin-top: 14px; }
@@ -463,15 +443,6 @@
             margin-top: 6px;
         }
 
-        .error {
-            display: none;
-            color: var(--over);
-            font-size: 13px;
-            margin-top: 8px;
-        }
-
-        .error.show { display: block; }
-
         /* ---------- Results ---------- */
         .empty {
             text-align: center;
@@ -492,8 +463,7 @@
             color: var(--accent);
         }
 
-        .results { display: none; }
-        .results.show { display: block; animation: rise 0.35s ease-out; }
+        .results { animation: rise 0.35s ease-out; }
 
         @keyframes rise {
             from { opacity: 0; transform: translateY(6px); }
@@ -512,6 +482,7 @@
 
         .verdict.under { background: var(--under-soft); border-color: var(--under-border); }
         .verdict.over { background: var(--over-soft); border-color: var(--over-border); }
+        .verdict.even { background: var(--accent-soft); border-color: var(--accent-border); }
 
         .verdict-icon {
             width: 52px;
@@ -525,7 +496,9 @@
 
         .verdict.under .verdict-icon { background: var(--under-bar); }
         .verdict.over .verdict-icon { background: var(--over-bar); }
-        .verdict.under .arrow-up, .verdict.over .arrow-down { display: none; }
+        .verdict.even .verdict-icon { background: var(--accent); }
+        .verdict-icon svg { display: none; }
+        .verdict.under .icon-under, .verdict.over .icon-over, .verdict.even .icon-even { display: block; }
 
         .verdict-word {
             font-size: 28px;
@@ -536,6 +509,7 @@
 
         .verdict.under .verdict-word { color: var(--under); }
         .verdict.over .verdict-word { color: var(--over); }
+        .verdict.even .verdict-word { color: var(--accent); }
 
         .verdict-text {
             color: var(--text);
@@ -544,26 +518,39 @@
             margin-top: 6px;
         }
 
-        /* Pace bars */
-        .pace {
-            margin-top: 22px;
-        }
-
-        .pace-row + .pace-row { margin-top: 14px; }
+        /* Pace bar: usage fill over the elapsed part of the week, tick at even pace */
+        .pace { margin-top: 22px; }
 
         .pace-head {
             display: flex;
             justify-content: space-between;
+            gap: 12px;
             font-size: 13px;
-            margin-bottom: 6px;
+            color: var(--text-2);
+            margin-bottom: 8px;
         }
 
-        .pace-head span:first-child { color: var(--text-2); font-weight: 500; }
-        .pace-head span:last-child { font-weight: 700; }
+        .pace-head strong { color: var(--text); font-weight: 700; }
+
+        .swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            margin-right: 6px;
+            vertical-align: -1px;
+        }
+
+        .swatch.usage { background: var(--usage-color, var(--accent)); }
+        .swatch.time { background: var(--time-hatch); }
+
+        .pace {
+            --time-hatch: repeating-linear-gradient(-45deg, var(--time), var(--time) 3px, transparent 3px, transparent 6px);
+        }
 
         .track {
             position: relative;
-            height: 12px;
+            height: 14px;
             border-radius: 999px;
             background: var(--surface-2);
             border: 1px solid var(--border);
@@ -578,21 +565,21 @@
             transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s;
         }
 
-        .fill.time {
-            background: repeating-linear-gradient(-45deg, var(--time), var(--time) 6px, color-mix(in srgb, var(--time) 75%, transparent) 6px, color-mix(in srgb, var(--time) 75%, transparent) 12px);
-        }
+        .fill.time { background: var(--time-hatch); opacity: 0.45; }
+        .fill.usage { background: var(--usage-color); }
 
-        .fill.usage.under { background: var(--under-bar); }
-        .fill.usage.over { background: var(--over-bar); }
+        .pace.under { --usage-color: var(--under-bar); }
+        .pace.over { --usage-color: var(--over-bar); }
+        .pace.even { --usage-color: var(--accent); }
 
         .marker {
             position: absolute;
-            top: -3px;
-            bottom: -3px;
+            top: 0;
+            bottom: 0;
             width: 2px;
             margin-left: -1px;
             background: var(--text);
-            opacity: 0.55;
+            opacity: 0.6;
             transition: left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
@@ -607,16 +594,10 @@
 
         .days span.today { color: var(--accent); font-weight: 700; }
 
-        .pace-legend {
-            margin-top: 6px;
-            font-size: 11px;
-            color: var(--text-3);
-        }
-
-        /* Stats grid */
+        /* Stats */
         .stats {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
             margin-top: 22px;
         }
@@ -644,21 +625,14 @@
             letter-spacing: -0.01em;
         }
 
+        .stat-value.good { color: var(--under); }
+        .stat-value.bad { color: var(--over); }
+
         .stat-sub {
             font-size: 12px;
             color: var(--text-2);
             margin-top: 3px;
             line-height: 1.35;
-        }
-
-        .stat-value.good { color: var(--under); }
-        .stat-value.bad { color: var(--over); }
-
-        .updated {
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--text-3);
-            text-align: center;
         }
 
         footer {
@@ -671,11 +645,18 @@
 
         @media (max-width: 420px) {
             body { padding-top: 24px; }
-            .card { padding: 18px; }
             h1 { font-size: 21px; }
+            .card { padding: 18px; }
+            .field-head { flex-wrap: wrap; }
+            .weekdays button { font-size: 12px; }
+            .step-row { grid-template-columns: 54px 44px minmax(0, 1fr) 44px; gap: 6px; }
+            .step-row .step-btn, .step-value { min-height: 44px; }
+            .step-value { font-size: 15px; padding: 0 6px; }
             .verdict { padding: 14px; gap: 12px; }
             .verdict-icon { width: 44px; height: 44px; }
             .verdict-word { font-size: 24px; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .stat:last-child { grid-column: 1 / -1; }
             .stat-value { font-size: 18px; }
         }
 
@@ -685,12 +666,12 @@
     </style>
 </head>
 <body>
-    <main class="app">
+    <main class="app" id="app">
         <div class="topbar">
             <div class="lang-switch" id="langSwitch" role="group" data-i18n-attr="aria-label:langAria" aria-label="Language">
-                <button type="button" data-lang="en" lang="en" aria-pressed="true" title="English">EN</button>
-                <button type="button" data-lang="id" lang="id" aria-pressed="false" title="Bahasa Indonesia">ID</button>
-                <button type="button" data-lang="es" lang="es" aria-pressed="false" title="Español">ES</button>
+                <button type="button" data-value="en" lang="en" aria-pressed="true" title="English">EN</button>
+                <button type="button" data-value="id" lang="id" aria-pressed="false" title="Bahasa Indonesia">ID</button>
+                <button type="button" data-value="es" lang="es" aria-pressed="false" title="Español">ES</button>
             </div>
         </div>
 
@@ -704,140 +685,130 @@
             </div>
         </header>
 
-        <section class="card" aria-labelledby="inputsTitle">
+        <section class="card" id="inputsCard" aria-labelledby="inputsTitle">
             <h2 class="card-title" id="inputsTitle" data-i18n="cycleTitle">Your cycle</h2>
 
-            <form id="usageForm" novalidate>
-                <div class="field">
-                    <div class="field-head">
-                        <span class="label" id="resetLabel">Cycle start</span>
-                        <button type="button" class="link-btn" id="useNowBtn" data-i18n="resetNow" data-i18n-attr="title:resetNowTitle" title="My usage window reset just now">Reset just now</button>
-                        <span class="reset-confirm" id="resetConfirm" role="group" aria-labelledby="resetConfirmText">
-                            <span id="resetConfirmText" data-i18n="resetConfirmQ">Reset to now?</span>
-                            <button type="button" class="confirm-btn" id="resetConfirmYes" data-i18n="confirm">Confirm</button>
-                            <button type="button" class="link-btn" id="resetConfirmNo" data-i18n="cancel">Cancel</button>
-                        </span>
-                    </div>
-                    <div class="segmented" id="dateModeToggle" role="group" data-i18n-attr="aria-label:dateTypeAria" aria-label="Cycle date type">
-                        <button type="button" class="active" data-mode="start" aria-pressed="true" data-i18n="cycleStart">Cycle start</button>
-                        <button type="button" data-mode="end" aria-pressed="false" data-i18n="cycleEnd">Cycle end</button>
-                    </div>
-                    <input type="hidden" id="resetTime">
-                    <div class="date-stepper" id="dateStepper" role="group" aria-labelledby="resetLabel" aria-describedby="resetDay cycleHint">
-                        <div class="date-row">
-                            <span class="date-row-label" data-i18n="stepDay">Day</span>
-                            <button type="button" class="step-btn" data-date-step="day" data-dir="-1" data-i18n-attr="aria-label:dayPrev" aria-label="Previous day">−</button>
-                            <div class="step-value num" id="dateDayValue">—</div>
-                            <button type="button" class="step-btn" data-date-step="day" data-dir="1" data-i18n-attr="aria-label:dayNext" aria-label="Next day">+</button>
-                        </div>
-                        <div class="date-row">
-                            <span class="date-row-label" data-i18n="stepHour">Hour</span>
-                            <button type="button" class="step-btn" data-date-step="hour" data-dir="-1" data-i18n-attr="aria-label:hourPrev" aria-label="One hour earlier">−</button>
-                            <div class="step-value num" id="dateHourValue">—</div>
-                            <button type="button" class="step-btn" data-date-step="hour" data-dir="1" data-i18n-attr="aria-label:hourNext" aria-label="One hour later">+</button>
-                        </div>
-                        <div class="date-row">
-                            <span class="date-row-label" data-i18n="stepMinute">Minute</span>
-                            <button type="button" class="step-btn" data-date-step="minute" data-dir="-1" data-i18n-attr="aria-label:minutePrev" aria-label="5 minutes earlier">−</button>
-                            <div class="step-value num" id="dateMinuteValue">—</div>
-                            <button type="button" class="step-btn" data-date-step="minute" data-dir="1" data-i18n-attr="aria-label:minuteNext" aria-label="5 minutes later">+</button>
-                        </div>
-                    </div>
-                    <p class="day-readout" id="resetDay" aria-live="polite">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
-                        <span id="resetDayText"></span>
-                    </p>
-                    <p class="hint" id="cycleHint">When your current 7-day usage window began. It repeats weekly, so you only need to enter it once.</p>
-                    <div class="notice" id="rolloverNotice" role="status"></div>
-                    <div class="error" id="resetError" role="alert"></div>
+            <div class="field">
+                <div class="field-head">
+                    <span class="label" id="resetLabel" data-i18n="resetLabel">Weekly reset</span>
+                    <button type="button" class="link-btn" id="useNowBtn" data-i18n="resetNow" data-i18n-attr="title:resetNowTitle">Reset just now</button>
+                    <span class="reset-confirm" id="resetConfirm" role="group" aria-labelledby="resetConfirmText">
+                        <span id="resetConfirmText" data-i18n="resetConfirmQ">Reset to now?</span>
+                        <button type="button" class="confirm-btn" id="resetConfirmYes" data-i18n="confirm">Confirm</button>
+                        <button type="button" class="link-btn" id="resetConfirmNo" data-i18n="cancel">Cancel</button>
+                    </span>
+                </div>
+                <div class="segmented" id="dateModeToggle" role="group" data-i18n-attr="aria-label:dateTypeAria">
+                    <button type="button" data-value="day" aria-pressed="true" data-i18n="modeDay">Day &amp; time</button>
+                    <button type="button" data-value="in" aria-pressed="false" data-i18n="modeIn">Resets in</button>
                 </div>
 
-                <div class="field">
-                    <div class="field-head">
-                        <span class="label" id="usageInputLabel">Usage used</span>
+                <div id="dayInput">
+                    <div class="weekdays" id="weekdayChips" role="group" data-i18n-attr="aria-label:weekdayAria"></div>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepTime">Time</span>
+                        <button type="button" class="step-btn" data-step="time" data-dir="-1" data-i18n-attr="aria-label:timePrev">−</button>
+                        <div class="step-value num" id="timeValue">—</div>
+                        <button type="button" class="step-btn" data-step="time" data-dir="1" data-i18n-attr="aria-label:timeNext">+</button>
                     </div>
-                    <div class="segmented" id="usageModeToggle" role="group" data-i18n-attr="aria-label:usageModeAria" aria-label="Usage input mode">
-                        <button type="button" class="active" data-mode="current" aria-pressed="true" data-i18n="usedSoFar">Used so far</button>
-                        <button type="button" data-mode="remaining" aria-pressed="false" data-i18n="remaining">Remaining</button>
-                    </div>
-                    <div class="stepper">
-                        <button type="button" class="step-btn" data-step="-1" data-i18n-attr="aria-label:decrease" aria-label="Decrease by 1%">−</button>
-                        <input type="number" id="usageValue" class="num" min="0" max="100" step="0.1" readonly tabindex="-1" inputmode="none" placeholder="—" aria-labelledby="usageInputLabel" aria-describedby="usageModeDescription">
-                        <button type="button" class="step-btn" data-step="1" data-i18n-attr="aria-label:increase" aria-label="Increase by 1%">+</button>
-                    </div>
-                    <div class="slider-wrap">
-                        <input type="range" id="usageSlider" min="0" max="100" step="0.5" value="0" data-i18n-attr="aria-label:sliderAria" aria-label="Usage percentage slider">
-                        <div class="slider-scale" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
-                    </div>
-                    <p class="hint" id="usageModeDescription">The percentage of your weekly limit you've already used, as shown by your AI provider.</p>
-                    <div class="error" id="usageError" role="alert"></div>
                 </div>
-            </form>
+
+                <div class="step-rows" id="inInput" hidden>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepDays">Days</span>
+                        <button type="button" class="step-btn" data-step="days" data-dir="-1" data-i18n-attr="aria-label:daysPrev">−</button>
+                        <div class="step-value num" id="daysValue">—</div>
+                        <button type="button" class="step-btn" data-step="days" data-dir="1" data-i18n-attr="aria-label:daysNext">+</button>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-row-label" data-i18n="stepHours">Hours</span>
+                        <button type="button" class="step-btn" data-step="hours" data-dir="-1" data-i18n-attr="aria-label:hoursPrev">−</button>
+                        <div class="step-value num" id="hoursValue">—</div>
+                        <button type="button" class="step-btn" data-step="hours" data-dir="1" data-i18n-attr="aria-label:hoursNext">+</button>
+                    </div>
+                </div>
+
+                <p class="hint" id="cycleSummary" aria-live="polite"></p>
+            </div>
+
+            <div class="field">
+                <div class="field-head">
+                    <span class="label" id="usageLabel">Usage used</span>
+                </div>
+                <div class="segmented" id="usageModeToggle" role="group" data-i18n-attr="aria-label:usageModeAria">
+                    <button type="button" data-value="current" aria-pressed="true" data-i18n="usedSoFar">Used so far</button>
+                    <button type="button" data-value="remaining" aria-pressed="false" data-i18n="remaining">Remaining</button>
+                </div>
+                <div class="usage-stepper">
+                    <button type="button" class="step-btn" data-step="usage" data-dir="-1" data-i18n-attr="aria-label:decrease">−</button>
+                    <button type="button" class="usage-display num" id="usageDisplay" aria-describedby="usageDesc">—</button>
+                    <input type="number" class="usage-edit num" id="usageEdit" min="0" max="100" step="1" inputmode="numeric" aria-labelledby="usageLabel" aria-describedby="usageDesc" hidden>
+                    <button type="button" class="step-btn" data-step="usage" data-dir="1" data-i18n-attr="aria-label:increase">+</button>
+                </div>
+                <div class="slider-wrap">
+                    <input type="range" id="usageSlider" min="0" max="100" step="1" value="0" aria-labelledby="usageLabel">
+                    <div class="slider-scale" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+                </div>
+                <p class="hint" id="usageDesc"></p>
+            </div>
         </section>
 
-        <section class="card" aria-labelledby="resultsTitle" aria-live="polite">
+        <section class="card" id="resultsCard" aria-labelledby="resultsTitle">
             <h2 class="card-title" id="resultsTitle" data-i18n="paceTitle">Your pace</h2>
 
             <div class="empty" id="emptyState">
                 <div class="empty-icon" aria-hidden="true">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                 </div>
-                <span data-i18n-html="emptyState">Enter your cycle date and usage above.<br>Your pace updates live as you type.</span>
+                <span data-i18n-html="emptyState">Set your weekly reset and usage above.<br>Your pace updates live.</span>
             </div>
 
-            <div class="results" id="results">
+            <div class="results" id="results" hidden>
                 <div class="verdict" id="verdict">
                     <div class="verdict-icon" aria-hidden="true">
-                        <svg class="arrow-down" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-                        <svg class="arrow-up" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+                        <svg class="icon-under" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+                        <svg class="icon-over" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+                        <svg class="icon-even" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 9h12M6 15h12"/></svg>
                     </div>
                     <div>
-                        <div class="verdict-word" id="status">UNDER</div>
+                        <div class="verdict-word" id="status"></div>
                         <p class="verdict-text" id="verdictText"></p>
                     </div>
                 </div>
 
-                <div class="pace">
-                    <div class="pace-row">
-                        <div class="pace-head"><span data-i18n="weekElapsed">Week elapsed</span><span class="num" id="timeElapsed">–</span></div>
-                        <div class="track"><div class="fill time" id="timeFill"></div></div>
-                        <div class="days" id="dayLabels" aria-hidden="true"></div>
+                <div class="pace" id="pace">
+                    <div class="pace-head">
+                        <span><i class="swatch usage" aria-hidden="true"></i><span data-i18n="usageUsed">Usage used</span> <strong class="num" id="displayUsage"></strong></span>
+                        <span><i class="swatch time" aria-hidden="true"></i><span data-i18n="weekElapsed">Week elapsed</span> <strong class="num" id="timeElapsed"></strong></span>
                     </div>
-                    <div class="pace-row">
-                        <div class="pace-head"><span data-i18n="usageUsed">Usage used</span><span class="num" id="displayUsage">–</span></div>
-                        <div class="track">
-                            <div class="fill usage" id="usageFill"></div>
-                            <div class="marker" id="paceMarker" data-i18n-attr="title:evenPace" title="Even pace"></div>
-                        </div>
-                        <p class="pace-legend" data-i18n="paceLegend">The tick marks where your usage would be at an even pace.</p>
+                    <div class="track" aria-hidden="true">
+                        <div class="fill time" id="timeFill"></div>
+                        <div class="fill usage" id="usageFill"></div>
+                        <div class="marker" id="paceMarker" data-i18n-attr="title:evenPace"></div>
                     </div>
+                    <div class="days" id="dayLabels" aria-hidden="true"></div>
                 </div>
 
                 <div class="stats">
                     <div class="stat">
-                        <div class="stat-label" data-i18n="difference">Difference</div>
-                        <div class="stat-value num" id="difference">–</div>
-                        <div class="stat-sub" id="differenceSub"></div>
-                    </div>
-                    <div class="stat">
                         <div class="stat-label" data-i18n="resetsIn">Resets in</div>
-                        <div class="stat-value num" id="resetsIn">–</div>
+                        <div class="stat-value num" id="resetsIn"></div>
                         <div class="stat-sub" id="resetsAt"></div>
                     </div>
                     <div class="stat">
                         <div class="stat-label" data-i18n="dailyBudget">Daily budget left</div>
-                        <div class="stat-value num" id="dailyBudget">–</div>
+                        <div class="stat-value num" id="dailyBudget"></div>
                         <div class="stat-sub" id="dailyBudgetSub"></div>
                     </div>
                     <div class="stat">
                         <div class="stat-label" data-i18n="projected">Projected at reset</div>
-                        <div class="stat-value num" id="projected">–</div>
+                        <div class="stat-value num" id="projected"></div>
                         <div class="stat-sub" id="projectedSub"></div>
                     </div>
                 </div>
-
-                <p class="updated" id="updatedAt"></p>
             </div>
+
+            <p class="sr-only" id="srVerdict" aria-live="polite"></p>
         </section>
 
         <footer data-i18n-html="footer">
@@ -846,11 +817,15 @@
         </footer>
     </main>
 
-    <script>
-        const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-        const HOUR_MS = 60 * 60 * 1000;
+    <!-- Core: constants, translations and pure pace maths. No DOM access, so test/core.test.js can run it in Node. -->
+    <script id="core">
+        const MINUTE_MS = 60 * 1000;
+        const HOUR_MS = 60 * MINUTE_MS;
+        const DAY_MS = 24 * HOUR_MS;
+        const WEEK_MS = 7 * DAY_MS;
         const EVEN_DAILY = 100 / 7;
-        const STORAGE_KEY = 'aboveorunder:v1';
+        const STORAGE_KEY = 'aboveorunder:v2';
+        const LEGACY_STORAGE_KEY = 'aboveorunder:v1';
         const LANG_KEY = 'aboveorunder:lang';
 
         // ---------- Translations ----------
@@ -861,28 +836,28 @@
                 langAria: 'Language',
                 subtitle: 'Is your weekly AI usage ahead of the clock or behind it?',
                 cycleTitle: 'Your cycle',
-                cycleStart: 'Cycle start',
-                cycleEnd: 'Cycle end',
+                resetLabel: 'Weekly reset',
+                modeDay: 'Day & time',
+                modeIn: 'Resets in',
+                dateTypeAria: 'How to enter your reset',
                 resetNow: 'Reset just now',
                 resetNowTitle: 'My usage window reset just now',
                 resetConfirmQ: 'Reset to now?',
                 confirm: 'Confirm',
                 cancel: 'Cancel',
-                stepDay: 'Day',
-                stepHour: 'Hour',
-                stepMinute: 'Minute',
-                dayPrev: 'Previous day',
-                dayNext: 'Next day',
-                hourPrev: 'One hour earlier',
-                hourNext: 'One hour later',
-                minutePrev: '5 minutes earlier',
-                minuteNext: '5 minutes later',
-                dateTypeAria: 'Cycle date type',
-                hintStart: 'When your current 7-day usage window began (your last reset). It repeats weekly, so you only need to enter it once.',
-                hintEnd: 'When your current 7-day usage window resets next, as many providers show it. It repeats weekly, so you only need to enter it once.',
-                dayStart: 'Starts {date}',
-                dayEnd: 'Resets {date}',
-                dayRepeat: 'repeats every {weekday}',
+                weekdayAria: 'Reset weekday',
+                stepTime: 'Time',
+                stepDays: 'Days',
+                stepHours: 'Hours',
+                timePrev: '15 minutes earlier',
+                timeNext: '15 minutes later',
+                daysPrev: 'One day less',
+                daysNext: 'One day more',
+                hoursPrev: 'One hour less',
+                hoursNext: 'One hour more',
+                summary: 'Resets every <strong>{weekday}</strong> at {time} · next {date}',
+                summaryEmptyDay: 'Pick the weekday and time your weekly limit resets.',
+                summaryEmptyIn: 'Enter the countdown your provider shows until the next reset.',
                 usageUsed: 'Usage used',
                 usageRemaining: 'Usage remaining',
                 usedSoFar: 'Used so far',
@@ -890,38 +865,24 @@
                 usageModeAria: 'Usage input mode',
                 decrease: 'Decrease by 1%',
                 increase: 'Increase by 1%',
-                sliderAria: 'Usage percentage slider',
+                tapToType: 'tap to type',
                 descUsed: "The percentage of your weekly limit you've already used, as shown by your AI provider.",
                 descRemaining: 'The percentage of your weekly limit you still have available, counting down from 100%.',
                 paceTitle: 'Your pace',
-                emptyState: 'Enter your cycle date and usage above.<br>Your pace updates live as you type.',
+                emptyState: 'Set your weekly reset and usage above.<br>Your pace updates live.',
                 weekElapsed: 'Week elapsed',
-                paceLegend: 'The tick marks where your usage would be at an even pace.',
                 evenPace: 'Even pace',
-                difference: 'Difference',
                 resetsIn: 'Resets in',
                 dailyBudget: 'Daily budget left',
                 projected: 'Projected at reset',
                 footer: 'Works with any provider that shows a weekly usage percentage.<br>Your inputs stay in this browser only. Pacing guidance, not a guarantee.',
-                errDate: 'Please enter a valid date and time.',
-                errEnd: 'Cycle end must be within the next 7 days.',
-                errStart: 'Cycle start must be in the past.',
-                errPct: 'Enter a percentage between 0 and 100.',
-                datePassed: 'That date has passed',
-                weeksAgoOne: 'That date is 1 week ago',
-                weeksAgoMany: 'That date is {n} weeks ago',
-                rolloverStart: '{when}, so your cycle has reset since. Using the current cycle that started <strong>{date}</strong>.',
-                rolloverEnd: '{when}, so your cycle has reset since. Using the current cycle that ends <strong>{date}</strong>.',
-                updateDate: 'Update date',
                 under: 'UNDER',
                 over: 'OVER',
-                onPaceUnder: 'Right on pace, with a sliver of room to spare. Keep going as you are.',
-                onPaceOver: 'Right on pace, just a hair ahead of the clock. Ease off slightly to stay safe.',
+                even: 'ON PACE',
+                onPace: 'Right on pace. Keep going as you are.',
                 behind: "You're {pct} behind the clock — about {time} of usage in the bank.",
                 hitLimit: "You've hit your weekly limit. It resets in {time}.",
                 ahead: "You're {pct} ahead of the clock. Pausing for ~{time} would bring you back on pace.",
-                diffUnder: '≈ {time} ahead of pace',
-                diffOver: '≈ {time} over pace',
                 perDay: '/day',
                 limitReached: 'Limit reached',
                 leftBeforeReset: 'left before reset',
@@ -929,9 +890,7 @@
                 tooEarly: 'Too early in the cycle to tell',
                 hitIn: "At this rate you'd hit 100% in ~{time}",
                 alreadyReached: 'Limit already reached',
-                withinLimit: 'At your current rate — within limit',
-                updated: 'Updated {time} · refreshes every minute',
-                unitD: 'd', unitH: 'h', unitM: 'm'
+                withinLimit: 'At your current rate — within limit'
             },
             id: {
                 pageTitle: 'Above or Under · Ritme Pemakaian AI',
@@ -939,28 +898,28 @@
                 langAria: 'Bahasa',
                 subtitle: 'Apakah pemakaian AI mingguanmu lebih cepat atau lebih lambat dari waktu?',
                 cycleTitle: 'Siklusmu',
-                cycleStart: 'Awal siklus',
-                cycleEnd: 'Akhir siklus',
+                resetLabel: 'Reset mingguan',
+                modeDay: 'Hari & jam',
+                modeIn: 'Reset dalam',
+                dateTypeAria: 'Cara mengisi waktu reset',
                 resetNow: 'Baru saja reset',
                 resetNowTitle: 'Jendela pemakaianku baru saja direset',
                 resetConfirmQ: 'Atur ke sekarang?',
                 confirm: 'Ya',
                 cancel: 'Batal',
-                stepDay: 'Hari',
-                stepHour: 'Jam',
-                stepMinute: 'Menit',
-                dayPrev: 'Hari sebelumnya',
-                dayNext: 'Hari berikutnya',
-                hourPrev: 'Satu jam lebih awal',
-                hourNext: 'Satu jam lebih lambat',
-                minutePrev: '5 menit lebih awal',
-                minuteNext: '5 menit lebih lambat',
-                dateTypeAria: 'Jenis tanggal siklus',
-                hintStart: 'Kapan jendela pemakaian 7 hari saat ini dimulai (reset terakhirmu). Berulang setiap minggu, jadi cukup diisi sekali.',
-                hintEnd: 'Kapan jendela pemakaian 7 hari saat ini akan direset, seperti yang ditampilkan banyak penyedia. Berulang setiap minggu, jadi cukup diisi sekali.',
-                dayStart: 'Dimulai {date}',
-                dayEnd: 'Reset {date}',
-                dayRepeat: 'berulang setiap {weekday}',
+                weekdayAria: 'Hari reset',
+                stepTime: 'Pukul',
+                stepDays: 'Hari',
+                stepHours: 'Jam',
+                timePrev: '15 menit lebih awal',
+                timeNext: '15 menit lebih lambat',
+                daysPrev: 'Kurangi satu hari',
+                daysNext: 'Tambah satu hari',
+                hoursPrev: 'Kurangi satu jam',
+                hoursNext: 'Tambah satu jam',
+                summary: 'Reset setiap <strong>{weekday}</strong> pukul {time} · berikutnya {date}',
+                summaryEmptyDay: 'Pilih hari dan jam batas mingguanmu direset.',
+                summaryEmptyIn: 'Masukkan hitung mundur yang ditampilkan penyedia hingga reset berikutnya.',
                 usageUsed: 'Pemakaian terpakai',
                 usageRemaining: 'Sisa pemakaian',
                 usedSoFar: 'Terpakai',
@@ -968,38 +927,24 @@
                 usageModeAria: 'Mode input pemakaian',
                 decrease: 'Kurangi 1%',
                 increase: 'Tambah 1%',
-                sliderAria: 'Penggeser persentase pemakaian',
+                tapToType: 'ketuk untuk mengetik',
                 descUsed: 'Persentase batas mingguan yang sudah kamu pakai, sesuai yang ditampilkan penyedia AI-mu.',
                 descRemaining: 'Persentase batas mingguan yang masih tersedia, menghitung mundur dari 100%.',
                 paceTitle: 'Ritmemu',
-                emptyState: 'Masukkan tanggal siklus dan pemakaianmu di atas.<br>Ritmemu langsung diperbarui saat kamu mengetik.',
+                emptyState: 'Atur reset mingguan dan pemakaianmu di atas.<br>Ritmemu langsung diperbarui.',
                 weekElapsed: 'Minggu berjalan',
-                paceLegend: 'Garis penanda menunjukkan posisi pemakaianmu jika ritmenya merata.',
                 evenPace: 'Ritme merata',
-                difference: 'Selisih',
                 resetsIn: 'Reset dalam',
                 dailyBudget: 'Sisa jatah harian',
                 projected: 'Proyeksi saat reset',
                 footer: 'Bisa dipakai dengan penyedia apa pun yang menampilkan persentase pemakaian mingguan.<br>Datamu hanya tersimpan di browser ini. Panduan ritme, bukan jaminan.',
-                errDate: 'Masukkan tanggal dan waktu yang valid.',
-                errEnd: 'Akhir siklus harus dalam 7 hari ke depan.',
-                errStart: 'Awal siklus harus di masa lalu.',
-                errPct: 'Masukkan persentase antara 0 dan 100.',
-                datePassed: 'Tanggal itu sudah lewat',
-                weeksAgoOne: 'Tanggal itu 1 minggu yang lalu',
-                weeksAgoMany: 'Tanggal itu {n} minggu yang lalu',
-                rolloverStart: '{when}, jadi siklusmu sudah direset sejak itu. Memakai siklus saat ini yang dimulai <strong>{date}</strong>.',
-                rolloverEnd: '{when}, jadi siklusmu sudah direset sejak itu. Memakai siklus saat ini yang berakhir <strong>{date}</strong>.',
-                updateDate: 'Perbarui tanggal',
                 under: 'DI BAWAH',
                 over: 'DI ATAS',
-                onPaceUnder: 'Tepat sesuai ritme, dengan sedikit ruang tersisa. Lanjutkan seperti ini.',
-                onPaceOver: 'Tepat sesuai ritme, hanya sedikit di depan waktu. Kurangi sedikit agar tetap aman.',
+                even: 'SESUAI',
+                onPace: 'Tepat sesuai ritme. Lanjutkan seperti ini.',
                 behind: 'Kamu {pct} di belakang waktu — sekitar {time} pemakaian sebagai cadangan.',
                 hitLimit: 'Kamu sudah mencapai batas mingguan. Reset dalam {time}.',
                 ahead: 'Kamu {pct} di depan waktu. Berhenti sekitar {time} akan mengembalikanmu ke ritme.',
-                diffUnder: '≈ {time} lebih hemat dari ritme',
-                diffOver: '≈ {time} melebihi ritme',
                 perDay: '/hari',
                 limitReached: 'Batas tercapai',
                 leftBeforeReset: 'tersisa sebelum reset',
@@ -1007,9 +952,7 @@
                 tooEarly: 'Masih terlalu awal dalam siklus',
                 hitIn: 'Dengan laju ini kamu akan mencapai 100% dalam ~{time}',
                 alreadyReached: 'Batas sudah tercapai',
-                withinLimit: 'Dengan laju saat ini — masih dalam batas',
-                updated: 'Diperbarui {time} · disegarkan setiap menit',
-                unitD: 'hr', unitH: 'j', unitM: 'mnt'
+                withinLimit: 'Dengan laju saat ini — masih dalam batas'
             },
             es: {
                 pageTitle: 'Above or Under · Ritmo de uso de IA',
@@ -1017,28 +960,28 @@
                 langAria: 'Idioma',
                 subtitle: '¿Tu uso semanal de IA va por delante o por detrás del reloj?',
                 cycleTitle: 'Tu ciclo',
-                cycleStart: 'Inicio del ciclo',
-                cycleEnd: 'Fin del ciclo',
+                resetLabel: 'Reinicio semanal',
+                modeDay: 'Día y hora',
+                modeIn: 'Se reinicia en',
+                dateTypeAria: 'Cómo indicar tu reinicio',
                 resetNow: 'Se reinició ahora',
                 resetNowTitle: 'Mi ventana de uso se acaba de reiniciar',
                 resetConfirmQ: '¿Reiniciar a ahora?',
                 confirm: 'Confirmar',
                 cancel: 'Cancelar',
-                stepDay: 'Día',
-                stepHour: 'Hora',
-                stepMinute: 'Minuto',
-                dayPrev: 'Día anterior',
-                dayNext: 'Día siguiente',
-                hourPrev: 'Una hora antes',
-                hourNext: 'Una hora después',
-                minutePrev: '5 minutos antes',
-                minuteNext: '5 minutos después',
-                dateTypeAria: 'Tipo de fecha del ciclo',
-                hintStart: 'Cuándo comenzó tu ventana de uso actual de 7 días (tu último reinicio). Se repite cada semana, así que solo tienes que introducirla una vez.',
-                hintEnd: 'Cuándo se reinicia tu ventana de uso actual de 7 días, como lo muestran muchos proveedores. Se repite cada semana, así que solo tienes que introducirla una vez.',
-                dayStart: 'Empieza el {date}',
-                dayEnd: 'Se reinicia el {date}',
-                dayRepeat: 'se repite cada {weekday}',
+                weekdayAria: 'Día de reinicio',
+                stepTime: 'Hora',
+                stepDays: 'Días',
+                stepHours: 'Horas',
+                timePrev: '15 minutos antes',
+                timeNext: '15 minutos después',
+                daysPrev: 'Un día menos',
+                daysNext: 'Un día más',
+                hoursPrev: 'Una hora menos',
+                hoursNext: 'Una hora más',
+                summary: 'Se reinicia cada <strong>{weekday}</strong> a las {time} · próximo: {date}',
+                summaryEmptyDay: 'Elige el día y la hora en que se reinicia tu límite semanal.',
+                summaryEmptyIn: 'Introduce la cuenta atrás que muestra tu proveedor hasta el próximo reinicio.',
                 usageUsed: 'Uso consumido',
                 usageRemaining: 'Uso restante',
                 usedSoFar: 'Usado',
@@ -1046,38 +989,24 @@
                 usageModeAria: 'Modo de entrada de uso',
                 decrease: 'Disminuir 1%',
                 increase: 'Aumentar 1%',
-                sliderAria: 'Control deslizante del porcentaje de uso',
+                tapToType: 'toca para escribir',
                 descUsed: 'El porcentaje de tu límite semanal que ya has usado, según lo muestra tu proveedor de IA.',
                 descRemaining: 'El porcentaje de tu límite semanal que aún tienes disponible, contando hacia atrás desde 100%.',
                 paceTitle: 'Tu ritmo',
-                emptyState: 'Introduce arriba la fecha de tu ciclo y tu uso.<br>Tu ritmo se actualiza en vivo mientras escribes.',
+                emptyState: 'Indica arriba tu reinicio semanal y tu uso.<br>Tu ritmo se actualiza en vivo.',
                 weekElapsed: 'Semana transcurrida',
-                paceLegend: 'La marca indica dónde estaría tu uso a un ritmo uniforme.',
                 evenPace: 'Ritmo uniforme',
-                difference: 'Diferencia',
                 resetsIn: 'Se reinicia en',
                 dailyBudget: 'Presupuesto diario',
                 projected: 'Proyección al reinicio',
                 footer: 'Funciona con cualquier proveedor que muestre un porcentaje de uso semanal.<br>Tus datos solo se guardan en este navegador. Es una guía de ritmo, no una garantía.',
-                errDate: 'Introduce una fecha y hora válidas.',
-                errEnd: 'El fin del ciclo debe estar dentro de los próximos 7 días.',
-                errStart: 'El inicio del ciclo debe estar en el pasado.',
-                errPct: 'Introduce un porcentaje entre 0 y 100.',
-                datePassed: 'Esa fecha ya pasó',
-                weeksAgoOne: 'Esa fecha fue hace 1 semana',
-                weeksAgoMany: 'Esa fecha fue hace {n} semanas',
-                rolloverStart: '{when}, así que tu ciclo se ha reiniciado desde entonces. Se usa el ciclo actual, que empezó el <strong>{date}</strong>.',
-                rolloverEnd: '{when}, así que tu ciclo se ha reiniciado desde entonces. Se usa el ciclo actual, que termina el <strong>{date}</strong>.',
-                updateDate: 'Actualizar fecha',
                 under: 'POR DEBAJO',
                 over: 'POR ENCIMA',
-                onPaceUnder: 'Justo a ritmo, con un pequeño margen de sobra. Sigue así.',
-                onPaceOver: 'Justo a ritmo, apenas por delante del reloj. Modera un poco para ir seguro.',
+                even: 'A RITMO',
+                onPace: 'Justo a ritmo. Sigue así.',
                 behind: 'Vas {pct} por detrás del reloj: unas {time} de uso de reserva.',
                 hitLimit: 'Has alcanzado tu límite semanal. Se reinicia en {time}.',
                 ahead: 'Vas {pct} por delante del reloj. Una pausa de ~{time} te devolvería al ritmo.',
-                diffUnder: '≈ {time} de margen',
-                diffOver: '≈ {time} por encima del ritmo',
                 perDay: '/día',
                 limitReached: 'Límite alcanzado',
                 leftBeforeReset: 'restante antes del reinicio',
@@ -1085,111 +1014,183 @@
                 tooEarly: 'Aún es pronto en el ciclo para saberlo',
                 hitIn: 'A este ritmo llegarías al 100% en ~{time}',
                 alreadyReached: 'Límite ya alcanzado',
-                withinLimit: 'A tu ritmo actual: dentro del límite',
-                updated: 'Actualizado {time} · se refresca cada minuto',
-                unitD: 'd', unitH: 'h', unitM: 'min'
+                withinLimit: 'A tu ritmo actual: dentro del límite'
             }
         };
-        const LANGS = Object.keys(I18N);
 
-        // Start in English unless the visitor picked a language before.
-        function detectLang() {
-            try {
-                const stored = localStorage.getItem(LANG_KEY);
-                if (LANGS.includes(stored)) return stored;
-            } catch (e) { /* storage unavailable */ }
-            return 'en';
+        // ---------- Pace maths ----------
+        // Weekly cycles repeat, so any past or future reset moment maps onto the current window.
+        function rollToCurrentCycle(start, now) {
+            return start + Math.floor((now - start) / WEEK_MS) * WEEK_MS;
         }
 
-        let lang = detectLang();
+        // The latest moment at or before `now` that falls on `weekday` (0 = Sunday) at `minutes` past local midnight.
+        function weeklyOccurrence(weekday, minutes, now) {
+            const d = new Date(now);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() - ((d.getDay() - weekday + 7) % 7));
+            d.setMinutes(minutes);
+            if (d.getTime() > now) d.setDate(d.getDate() - 7);
+            return d.getTime();
+        }
 
+        // `used` is the share of the weekly limit already consumed (0–100); times are epoch ms.
+        function computePace({ start, used, now }) {
+            const cycleStart = rollToCurrentCycle(start, now);
+            const resetAt = cycleStart + WEEK_MS;
+            const elapsedMs = now - cycleStart;
+            const remainingMs = resetAt - now;
+            const timeElapsed = (elapsedMs / WEEK_MS) * 100;
+            const remaining = 100 - used;
+            const difference = used - timeElapsed;
+
+            let status;
+            if (used >= 100) status = 'over';
+            else if (Math.abs(difference) < 1) status = 'even';
+            else status = difference < 0 ? 'under' : 'over';
+
+            const daysLeft = remainingMs / DAY_MS;
+            const dailyBudget = remaining <= 0 ? 0 : remaining / Math.max(daysLeft, 1);
+            const projected = timeElapsed < 2 ? null : (used / timeElapsed) * 100;
+            const msToLimit = projected !== null && projected > 100 && used < 100
+                ? (remaining / used) * elapsedMs
+                : null;
+
+            return {
+                cycleStart, resetAt, elapsedMs, remainingMs, timeElapsed,
+                used, remaining, difference, status,
+                // Time it takes the clock to cover the gap between usage and even pace.
+                differenceMs: (Math.abs(difference) / 100) * WEEK_MS,
+                dailyBudget, projected, msToLimit
+            };
+        }
+
+        // v1 stored the cycle as a local "YYYY-MM-DDTHH:mm" string (start or end) and the displayed usage as a string.
+        function migrateV1(old) {
+            const state = { start: null, dateMode: 'day', usageMode: old.mode === 'remaining' ? 'remaining' : 'current', used: null };
+            const parsed = old.resetTime ? new Date(old.resetTime).getTime() : NaN;
+            if (Number.isFinite(parsed)) state.start = old.dateMode === 'end' ? parsed - WEEK_MS : parsed;
+            const shown = parseFloat(old.usage);
+            if (Number.isFinite(shown)) {
+                const used = state.usageMode === 'remaining' ? 100 - shown : shown;
+                state.used = Math.round(Math.min(Math.max(used, 0), 100));
+            }
+            return state;
+        }
+    </script>
+
+    <script>
+        const LANGS = Object.keys(I18N);
+        const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first
+
+        const $ = id => document.getElementById(id);
+        const els = {
+            inputsCard: $('inputsCard'),
+            resultsCard: $('resultsCard'),
+            langSwitch: $('langSwitch'),
+            dateModeToggle: $('dateModeToggle'),
+            usageModeToggle: $('usageModeToggle'),
+            weekdayChips: $('weekdayChips'),
+            dayInput: $('dayInput'),
+            inInput: $('inInput'),
+            usageDisplay: $('usageDisplay'),
+            usageEdit: $('usageEdit'),
+            usageSlider: $('usageSlider')
+        };
+
+        // ---------- State ----------
+        // start: any reset moment of the weekly cycle (epoch ms); used: % of the limit consumed (integer).
+        const state = { start: null, dateMode: 'day', usageMode: 'current', used: null };
+        let lang = 'en';
+
+        function loadState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (saved) return saved;
+                const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY));
+                if (legacy) {
+                    const migrated = migrateV1(legacy);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+                    localStorage.removeItem(LEGACY_STORAGE_KEY);
+                    return migrated;
+                }
+            } catch (e) { /* storage unavailable or corrupt */ }
+            return null;
+        }
+
+        function saveState() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+        }
+
+        function setState(patch) {
+            Object.assign(state, patch);
+            saveState();
+            update(true);
+        }
+
+        // ---------- Formatting ----------
         function t(key, vars = {}) {
-            const str = (I18N[lang] && I18N[lang][key]) ?? I18N.en[key] ?? key;
+            const str = I18N[lang][key] ?? I18N.en[key] ?? key;
             return str.replace(/\{(\w+)\}/g, (m, name) => (name in vars ? vars[name] : m));
         }
 
-        const $ = id => document.getElementById(id);
-        const resetInput = $('resetTime');
-        const usageInput = $('usageValue');
-        const usageSlider = $('usageSlider');
-        const modeButtons = document.querySelectorAll('#usageModeToggle button');
-        const dateModeButtons = document.querySelectorAll('#dateModeToggle button');
-        const langButtons = document.querySelectorAll('#langSwitch button');
-        const stepButtons = document.querySelectorAll('.step-btn');
-
-        let usageInputMode = 'current';
-        let dateInputMode = 'start';
-
-        // ---------- Helpers ----------
-        function clampUsage(value) {
-            return Math.min(Math.max(value, 0), 100);
-        }
-
-        function displayValueToCurrentUsage(value, mode = usageInputMode) {
-            return mode === 'remaining' ? 100 - value : value;
+        const formatters = new Map();
+        function numberFormat(options) {
+            const key = lang + JSON.stringify(options);
+            if (!formatters.has(key)) formatters.set(key, new Intl.NumberFormat(lang, options));
+            return formatters.get(key);
         }
 
         function formatPct(value, digits = 1) {
-            return value.toLocaleString(lang, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + '%';
+            return numberFormat({ minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value) + '%';
         }
 
-        function formatInputValue(value) {
-            return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+        function formatUnit(n, unit, unitDisplay = 'narrow') {
+            return numberFormat({ style: 'unit', unit, unitDisplay }).format(n);
         }
 
         function formatDuration(ms) {
-            const totalMinutes = Math.max(0, Math.round(ms / 60000));
+            const totalMinutes = Math.max(0, Math.round(ms / MINUTE_MS));
             const days = Math.floor(totalMinutes / 1440);
             const hours = Math.floor((totalMinutes % 1440) / 60);
             const minutes = totalMinutes % 60;
-            const [d, h, m] = [t('unitD'), t('unitH'), t('unitM')];
-            if (days > 0) return `${days}${d} ${hours}${h}`;
-            if (hours > 0) return `${hours}${h} ${minutes}${m}`;
-            return `${minutes}${m}`;
+            if (days > 0) return `${formatUnit(days, 'day')} ${formatUnit(hours, 'hour')}`;
+            if (hours > 0) return `${formatUnit(hours, 'hour')} ${formatUnit(minutes, 'minute')}`;
+            return formatUnit(minutes, 'minute');
         }
 
-        // Always include the full weekday so it matches "resets Monday 9 PM" style labels.
         function formatDateTime(date) {
-            return date.toLocaleString(lang, {
-                weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-            });
-        }
-
-        function formatWeekday(date) {
-            return date.toLocaleDateString(lang, { weekday: 'long' });
+            return date.toLocaleString(lang, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
 
         function formatTime(date) {
             return date.toLocaleTimeString(lang, { hour: 'numeric', minute: '2-digit' });
         }
 
+        function weekdayName(day, style) {
+            // 1 Jan 2024 was a Monday.
+            return new Date(2024, 0, 1 + ((day + 6) % 7)).toLocaleDateString(lang, { weekday: style }).replace(/\.$/, '');
+        }
+
         function escapeHtml(str) {
             return str.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
-        function toLocalInputValue(date) {
-            const pad = n => String(n).padStart(2, '0');
-            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        // ---------- DOM helpers ----------
+        function setText(el, text) {
+            if (el.textContent !== text) el.textContent = text;
         }
 
-        // ---------- Persistence (best effort) ----------
-        function saveState() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    resetTime: resetInput.value,
-                    dateMode: dateInputMode,
-                    mode: usageInputMode,
-                    usage: usageInput.value
-                }));
-            } catch (e) { /* storage unavailable */ }
+        function setHtml(el, html) {
+            if (el.innerHTML !== html) el.innerHTML = html;
         }
 
-        function loadState() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
-            } catch (e) {
-                return null;
-            }
+        function setPressed(group, value) {
+            group.querySelectorAll('button').forEach(button => {
+                const on = button.dataset.value === String(value);
+                button.classList.toggle('active', on);
+                button.setAttribute('aria-pressed', String(on));
+            });
         }
 
         // ---------- Language ----------
@@ -1198,12 +1199,8 @@
             document.title = t('pageTitle');
             document.querySelector('meta[name="description"]').setAttribute('content', t('metaDescription'));
 
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                el.textContent = t(el.dataset.i18n);
-            });
-            document.querySelectorAll('[data-i18n-html]').forEach(el => {
-                el.innerHTML = t(el.dataset.i18nHtml);
-            });
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+            document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
             document.querySelectorAll('[data-i18n-attr]').forEach(el => {
                 el.dataset.i18nAttr.split(';').forEach(pair => {
                     const [attr, key] = pair.split(':');
@@ -1211,20 +1208,11 @@
                 });
             });
 
-            langButtons.forEach(button => {
-                const isActive = button.dataset.lang === lang;
-                button.classList.toggle('active', isActive);
-                button.setAttribute('aria-pressed', String(isActive));
-            });
-
-            applyModeText();
-        }
-
-        function applyModeText() {
-            $('resetLabel').textContent = t(dateInputMode === 'end' ? 'cycleEnd' : 'cycleStart');
-            $('cycleHint').textContent = t(dateInputMode === 'end' ? 'hintEnd' : 'hintStart');
-            $('usageInputLabel').textContent = t(usageInputMode === 'remaining' ? 'usageRemaining' : 'usageUsed');
-            $('usageModeDescription').textContent = t(usageInputMode === 'remaining' ? 'descRemaining' : 'descUsed');
+            els.weekdayChips.innerHTML = WEEKDAY_ORDER
+                .map(day => `<button type="button" data-value="${day}" aria-pressed="false" aria-label="${escapeHtml(weekdayName(day, 'long'))}">${escapeHtml(weekdayName(day, 'short'))}</button>`)
+                .join('');
+            dayLabelsKey = null;
+            setPressed(els.langSwitch, lang);
         }
 
         function setLang(next) {
@@ -1232,137 +1220,211 @@
             lang = next;
             try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* storage unavailable */ }
             applyStaticText();
-            compute();
+            update(false);
         }
 
-        // ---------- Input syncing ----------
-        function syncSlider() {
-            const value = parseFloat(usageInput.value);
-            const sliderValue = isNaN(value) ? 0 : clampUsage(value);
-            usageSlider.value = sliderValue;
-            usageSlider.style.setProperty('--fill', sliderValue + '%');
+        // ---------- Inputs ----------
+        function displayedUsage() {
+            if (state.used === null) return null;
+            return state.usageMode === 'remaining' ? 100 - state.used : state.used;
         }
 
-        function stepUsageValue(direction) {
-            const currentValue = parseFloat(usageInput.value);
-            const baseValue = isNaN(currentValue) ? 0 : currentValue;
-            const nextValue = clampUsage(Math.round((baseValue + direction) * 10) / 10);
-            usageInput.value = formatInputValue(nextValue);
-            onInputChange();
+        function setDisplayedUsage(value) {
+            const v = Math.round(Math.min(Math.max(value, 0), 100));
+            setState({ used: state.usageMode === 'remaining' ? 100 - v : v });
         }
 
-        function updateUsageMode(mode) {
-            if (usageInputMode === mode) return;
-
-            const previous = parseFloat(usageInput.value);
-            usageInputMode = mode;
-
-            modeButtons.forEach(button => {
-                const isActive = button.dataset.mode === mode;
-                button.classList.toggle('active', isActive);
-                button.setAttribute('aria-pressed', String(isActive));
-            });
-
-            applyModeText();
-
-            // Flip the value so the underlying usage stays the same.
-            if (!isNaN(previous)) {
-                usageInput.value = formatInputValue(Math.round((100 - clampUsage(previous)) * 10) / 10);
-            }
-            onInputChange();
+        function stepUsage(dir) {
+            const base = displayedUsage() ?? (state.usageMode === 'remaining' ? 100 : 0);
+            setDisplayedUsage(base + dir);
         }
 
-        function updateDateMode(mode) {
-            if (dateInputMode === mode) return;
-
-            const previous = resetInput.value ? new Date(resetInput.value) : null;
-            dateInputMode = mode;
-
-            dateModeButtons.forEach(button => {
-                const isActive = button.dataset.mode === mode;
-                button.classList.toggle('active', isActive);
-                button.setAttribute('aria-pressed', String(isActive));
-            });
-
-            applyModeText();
-
-            // Shift the date by a week so it still describes the same cycle.
-            if (previous && !isNaN(previous.getTime())) {
-                const shift = mode === 'end' ? WEEK_MS : -WEEK_MS;
-                resetInput.value = toLocalInputValue(new Date(previous.getTime() + shift));
-            }
-            onInputChange();
+        // The current cycle's reset moment, or null before one is set.
+        function currentStart(now) {
+            return state.start === null ? null : new Date(rollToCurrentCycle(state.start, now));
         }
 
-        // Spell out the weekday of the entered date; the native picker doesn't show it.
-        function renderDayReadout() {
-            const readout = $('resetDay');
-            const parsed = resetInput.value ? new Date(resetInput.value) : null;
-            renderDateStepper(parsed);
-            if (!parsed || isNaN(parsed.getTime())) {
-                readout.classList.remove('show');
-                return;
-            }
-            const dateStr = parsed.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
-            const weekday = escapeHtml(formatWeekday(parsed));
-            const when = `<strong>${weekday}</strong>, ${escapeHtml(dateStr)} · ${escapeHtml(formatTime(parsed))}`;
-            const repeat = t('dayRepeat', { weekday });
-            $('resetDayText').innerHTML = `${t(dateInputMode === 'end' ? 'dayEnd' : 'dayStart', { date: when })} <span>(${repeat})</span>`;
-            readout.classList.add('show');
+        function pickWeekday(day) {
+            const now = Date.now();
+            const current = currentStart(now);
+            const minutes = current ? current.getHours() * 60 + current.getMinutes() : new Date(now).getHours() * 60;
+            setState({ start: weeklyOccurrence(day, minutes, now) });
         }
 
-        function renderDateStepper(date) {
-            const ok = date && !isNaN(date.getTime());
-            $('dateDayValue').textContent = ok
-                ? date.toLocaleDateString(lang, { weekday: 'short', month: 'short', day: 'numeric' })
-                : '—';
-            $('dateHourValue').textContent = ok
-                ? date.toLocaleTimeString(lang, { hour: 'numeric' })
-                : '—';
-            $('dateMinuteValue').textContent = ok
-                ? ':' + String(date.getMinutes()).padStart(2, '0')
-                : '—';
+        // Step the reset time of day by 15 minutes, snapping to the grid and keeping the weekday.
+        function stepTime(dir) {
+            const now = Date.now();
+            const base = currentStart(now) ?? new Date(now);
+            const m = base.getHours() * 60 + base.getMinutes();
+            const snapped = dir > 0 ? Math.floor(m / 15) * 15 + 15 : Math.ceil(m / 15) * 15 - 15;
+            setState({ start: weeklyOccurrence(base.getDay(), (snapped + 1440) % 1440, now) });
         }
 
-        // Step the cycle date by a day, an hour or 5 minutes (snapping to the 5-minute grid).
-        function stepDate(unit, dir) {
-            const now = new Date();
-            const max = dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now;
-            let date = resetInput.value ? new Date(resetInput.value) : null;
+        function remainingHours(now) {
+            const current = currentStart(now);
+            const remaining = current ? current.getTime() + WEEK_MS - now : WEEK_MS;
+            return Math.round(remaining / HOUR_MS);
+        }
 
-            if (!date || isNaN(date.getTime())) {
-                // Nothing entered yet: step from "now" (or a week from now for a cycle end).
-                date = new Date(max.getTime());
-                date.setSeconds(0, 0);
-            }
+        // Step the "resets in" countdown by a day or an hour, between 1 hour and 7 days.
+        function stepCountdown(unitHours, dir) {
+            const now = Date.now();
+            const hours = Math.min(Math.max(remainingHours(now) + dir * unitHours, 1), 7 * 24);
+            setState({ start: now + hours * HOUR_MS - WEEK_MS });
+        }
 
-            if (unit === 'day') {
-                date.setDate(date.getDate() + dir);
-            } else if (unit === 'hour') {
-                date.setHours(date.getHours() + dir);
+        function renderInputs(now) {
+            setPressed(els.dateModeToggle, state.dateMode);
+            setPressed(els.usageModeToggle, state.usageMode);
+            els.dayInput.hidden = state.dateMode !== 'day';
+            els.inInput.hidden = state.dateMode !== 'in';
+
+            const current = currentStart(now);
+            setPressed(els.weekdayChips, current ? current.getDay() : '');
+            setText($('timeValue'), current ? formatTime(current) : '—');
+
+            if (current) {
+                const hours = remainingHours(now);
+                setText($('daysValue'), formatUnit(Math.floor(hours / 24), 'day', 'long'));
+                setText($('hoursValue'), formatUnit(hours % 24, 'hour', 'long'));
+                const next = new Date(current.getTime() + WEEK_MS);
+                setHtml($('cycleSummary'), t('summary', {
+                    weekday: escapeHtml(weekdayName(current.getDay(), 'long')),
+                    time: escapeHtml(formatTime(current)),
+                    date: escapeHtml(next.toLocaleDateString(lang, { month: 'short', day: 'numeric' }))
+                }));
             } else {
-                const m = date.getMinutes();
-                const snapped = dir > 0 ? Math.floor(m / 5) * 5 + 5 : Math.ceil(m / 5) * 5 - 5;
-                date.setMinutes(snapped);
+                setText($('daysValue'), '—');
+                setText($('hoursValue'), '—');
+                setText($('cycleSummary'), t(state.dateMode === 'in' ? 'summaryEmptyIn' : 'summaryEmptyDay'));
             }
 
-            // A start can't be in the future; an end can't be more than a week out.
-            if (date > max) {
-                date = new Date(max.getTime());
-                date.setSeconds(0, 0);
-            }
-            resetInput.value = toLocalInputValue(date);
-            onInputChange();
+            const remainingMode = state.usageMode === 'remaining';
+            setText($('usageLabel'), t(remainingMode ? 'usageRemaining' : 'usageUsed'));
+            setText($('usageDesc'), t(remainingMode ? 'descRemaining' : 'descUsed'));
+
+            const shown = displayedUsage();
+            const shownText = shown === null ? '—' : formatPct(shown, 0);
+            setText(els.usageDisplay, shownText);
+            els.usageDisplay.setAttribute('aria-label', `${t(remainingMode ? 'usageRemaining' : 'usageUsed')}: ${shownText}, ${t('tapToType')}`);
+            els.usageSlider.value = shown ?? 0;
+            els.usageSlider.style.setProperty('--fill', (shown ?? 0) + '%');
+            els.usageSlider.setAttribute('aria-valuetext', shownText);
         }
 
+        // ---------- Results ----------
+        let dayLabelsKey = null;
+        let lastStatus = null;
+        let lastSpoken = '';
+        let speakTimer = null;
+
+        function renderDayLabels(cycleStart, todayIndex) {
+            const container = $('dayLabels');
+            const key = `${cycleStart}|${lang}`;
+            if (key !== dayLabelsKey) {
+                dayLabelsKey = key;
+                container.innerHTML = '';
+                for (let i = 0; i < 7; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = weekdayName(new Date(cycleStart + i * DAY_MS).getDay(), 'short');
+                    container.appendChild(span);
+                }
+            }
+            [...container.children].forEach((span, i) => span.classList.toggle('today', i === todayIndex));
+        }
+
+        // Announce only the verdict: debounced after user input, and on the clock only when the verdict flips.
+        function announce(text, status, fromUser) {
+            const speak = () => {
+                if (text === lastSpoken) return;
+                lastSpoken = text;
+                $('srVerdict').textContent = text;
+            };
+            clearTimeout(speakTimer);
+            if (fromUser) speakTimer = setTimeout(speak, 900);
+            else if (lastStatus !== null && status !== lastStatus) speak();
+            else if (lastStatus === null) lastSpoken = text;
+            lastStatus = status;
+        }
+
+        function renderResults(now, fromUser) {
+            const complete = state.start !== null && state.used !== null;
+            $('emptyState').hidden = complete;
+            $('results').hidden = !complete;
+            if (!complete) return;
+
+            const r = computePace({ start: state.start, used: state.used, now });
+            const gap = formatDuration(r.differenceMs);
+
+            // Verdict
+            $('verdict').className = 'verdict ' + r.status;
+            const word = t(r.status);
+            setText($('status'), word);
+            let text;
+            if (r.used >= 100) text = t('hitLimit', { time: formatDuration(r.remainingMs) });
+            else if (r.status === 'even') text = t('onPace');
+            else if (r.status === 'under') text = t('behind', { pct: formatPct(-r.difference), time: gap });
+            else text = t('ahead', { pct: formatPct(r.difference), time: gap });
+            setText($('verdictText'), text);
+            announce(`${word}. ${text}`, r.status, fromUser);
+
+            // Pace bar
+            $('pace').className = 'pace ' + r.status;
+            setText($('displayUsage'), formatPct(r.used, 0));
+            setText($('timeElapsed'), formatPct(r.timeElapsed));
+            $('timeFill').style.width = r.timeElapsed + '%';
+            $('usageFill').style.width = r.used + '%';
+            $('paceMarker').style.left = r.timeElapsed + '%';
+            renderDayLabels(r.cycleStart, Math.min(6, Math.floor(r.elapsedMs / DAY_MS)));
+
+            // Resets in
+            setText($('resetsIn'), formatDuration(r.remainingMs));
+            setText($('resetsAt'), formatDateTime(new Date(r.resetAt)));
+
+            // Daily budget
+            const dailyEl = $('dailyBudget');
+            if (r.remaining <= 0) {
+                setText(dailyEl, formatPct(0, 0) + t('perDay'));
+                dailyEl.className = 'stat-value num bad';
+                setText($('dailyBudgetSub'), t('limitReached'));
+            } else if (r.remainingMs < HOUR_MS) {
+                setText(dailyEl, formatPct(r.remaining, 0));
+                dailyEl.className = 'stat-value num';
+                setText($('dailyBudgetSub'), t('leftBeforeReset'));
+            } else {
+                setText(dailyEl, formatPct(r.dailyBudget) + t('perDay'));
+                dailyEl.className = 'stat-value num ' + (r.dailyBudget >= EVEN_DAILY ? 'good' : 'bad');
+                setText($('dailyBudgetSub'), t('dailySub', { left: formatPct(r.remaining, 0), even: formatPct(EVEN_DAILY) }));
+            }
+
+            // Projection at the current rate
+            const projectedEl = $('projected');
+            if (r.projected === null) {
+                setText(projectedEl, '–');
+                projectedEl.className = 'stat-value num';
+                setText($('projectedSub'), t('tooEarly'));
+            } else {
+                setText(projectedEl, r.projected > 999 ? '>999%' : formatPct(r.projected, 0));
+                projectedEl.className = 'stat-value num ' + (r.projected <= 100 ? 'good' : 'bad');
+                let sub = t('withinLimit');
+                if (r.msToLimit !== null) sub = t('hitIn', { time: formatDuration(r.msToLimit) });
+                else if (r.projected > 100) sub = t('alreadyReached');
+                setText($('projectedSub'), sub);
+            }
+        }
+
+        function update(fromUser) {
+            const now = Date.now();
+            renderInputs(now);
+            renderResults(now, fromUser);
+        }
+
+        // ---------- Wiring ----------
         // Tap for one step; press and hold to repeat, speeding up the longer it's held.
         function attachRepeat(button, action) {
             let timer = null;
             let delay = 0;
-            const stop = () => {
-                clearTimeout(timer);
-                timer = null;
-            };
+            const stop = () => { clearTimeout(timer); timer = null; };
             const tick = () => {
                 action();
                 delay = Math.max(50, delay * 0.82);
@@ -1379,224 +1441,67 @@
             ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(type => button.addEventListener(type, stop));
             button.addEventListener('contextmenu', e => e.preventDefault());
             // Keyboard activation (Enter/Space) arrives as a click with no pointer.
-            button.addEventListener('click', e => {
-                if (e.detail === 0) action();
+            button.addEventListener('click', e => { if (e.detail === 0) action(); });
+        }
+
+        const stepActions = {
+            usage: dir => stepUsage(dir),
+            time: dir => stepTime(dir),
+            days: dir => stepCountdown(24, dir),
+            hours: dir => stepCountdown(1, dir)
+        };
+        document.querySelectorAll('.step-btn').forEach(button => {
+            const action = stepActions[button.dataset.step];
+            const dir = Number(button.dataset.dir);
+            attachRepeat(button, () => action(dir));
+        });
+
+        function onGroupClick(group, handler) {
+            group.addEventListener('click', e => {
+                const button = e.target.closest('button[data-value]');
+                if (button) handler(button.dataset.value);
             });
         }
 
-        // ---------- Core calculation ----------
-        function compute(now = new Date()) {
-            const resetError = $('resetError');
-            const usageError = $('usageError');
-            const notice = $('rolloverNotice');
-            resetError.classList.remove('show');
-            usageError.classList.remove('show');
-            notice.classList.remove('show');
-            $('dateStepper').classList.remove('invalid');
-            usageInput.classList.remove('invalid');
+        onGroupClick(els.langSwitch, setLang);
+        onGroupClick(els.dateModeToggle, mode => { if (mode !== state.dateMode) setState({ dateMode: mode }); });
+        onGroupClick(els.usageModeToggle, mode => { if (mode !== state.usageMode) setState({ usageMode: mode }); });
+        onGroupClick(els.weekdayChips, day => pickWeekday(Number(day)));
 
-            renderDayReadout();
+        els.usageSlider.addEventListener('input', () => setDisplayedUsage(Number(els.usageSlider.value)));
 
-            let valid = true;
-
-            // Cycle start (entered directly, or derived from the cycle end)
-            let cycleStart = null;
-            if (resetInput.value) {
-                const parsed = new Date(resetInput.value);
-                const isEnd = dateInputMode === 'end';
-                const anchorStart = isEnd ? new Date(parsed.getTime() - WEEK_MS) : parsed;
-                if (isNaN(parsed.getTime())) {
-                    showFieldError($('dateStepper'), resetError, t('errDate'));
-                    valid = false;
-                } else if (anchorStart > now) {
-                    showFieldError($('dateStepper'), resetError, t(isEnd ? 'errEnd' : 'errStart'));
-                    valid = false;
-                } else {
-                    // Weekly cycles repeat: roll an old date forward to the current window.
-                    const cyclesPassed = Math.floor((now - anchorStart) / WEEK_MS);
-                    cycleStart = new Date(anchorStart.getTime() + cyclesPassed * WEEK_MS);
-                    const cycleEnd = new Date(cycleStart.getTime() + WEEK_MS);
-                    if (cyclesPassed > 0) {
-                        const weeksAgo = isEnd ? cyclesPassed - 1 : cyclesPassed;
-                        const when = weeksAgo === 0
-                            ? t('datePassed')
-                            : t(weeksAgo === 1 ? 'weeksAgoOne' : 'weeksAgoMany', { n: weeksAgo });
-                        const date = escapeHtml(formatDateTime(isEnd ? cycleEnd : cycleStart));
-                        notice.innerHTML = `${t(isEnd ? 'rolloverEnd' : 'rolloverStart', { when, date })} <button type="button" class="link-btn" id="applyRollover">${t('updateDate')}</button>`;
-                        notice.classList.add('show');
-                        $('applyRollover').addEventListener('click', () => {
-                            resetInput.value = toLocalInputValue(isEnd ? cycleEnd : cycleStart);
-                            onInputChange();
-                        });
-                    }
-                }
-            } else {
-                valid = false;
-            }
-
-            // Usage
-            const displayed = parseFloat(usageInput.value);
-            if (usageInput.value === '') {
-                valid = false;
-            } else if (isNaN(displayed) || displayed < 0 || displayed > 100) {
-                showFieldError(usageInput, usageError, t('errPct'));
-                valid = false;
-            }
-
-            if (!valid || !cycleStart) {
-                $('results').classList.remove('show');
-                $('emptyState').style.display = '';
-                return;
-            }
-
-            const currentUsage = displayValueToCurrentUsage(displayed);
-            const remainingUsage = 100 - currentUsage;
-            const elapsedMs = now - cycleStart;
-            const remainingMs = WEEK_MS - elapsedMs;
-            const timeElapsed = Math.min((elapsedMs / WEEK_MS) * 100, 100);
-            const difference = currentUsage - timeElapsed;
-            const isUnder = difference < 0;
-            const resetAt = new Date(cycleStart.getTime() + WEEK_MS);
-
-            render({ now, cycleStart, resetAt, currentUsage, remainingUsage, elapsedMs, remainingMs, timeElapsed, difference, isUnder });
+        // Tap the number to type it; Enter or leaving the field keeps it, Escape restores the previous value.
+        let usageBeforeEdit = null;
+        els.usageDisplay.addEventListener('click', () => {
+            usageBeforeEdit = state.used;
+            els.usageEdit.value = displayedUsage() ?? '';
+            els.usageDisplay.hidden = true;
+            els.usageEdit.hidden = false;
+            els.usageEdit.focus();
+            els.usageEdit.select();
+        });
+        els.usageEdit.addEventListener('input', () => {
+            const v = parseFloat(els.usageEdit.value);
+            if (Number.isFinite(v)) setDisplayedUsage(v);
+        });
+        function finishUsageEdit() {
+            if (els.usageEdit.hidden) return;
+            els.usageEdit.hidden = true;
+            els.usageDisplay.hidden = false;
+            els.usageDisplay.focus();
         }
-
-        function showFieldError(input, el, message) {
-            input.classList.add('invalid');
-            el.textContent = message;
-            el.classList.add('show');
-        }
-
-        function render(r) {
-            const statusClass = r.isUnder ? 'under' : 'over';
-            const absDiff = Math.abs(r.difference);
-            const timeEquivalent = formatDuration((absDiff / 100) * WEEK_MS);
-
-            // Verdict
-            const verdict = $('verdict');
-            verdict.className = 'verdict ' + statusClass;
-            $('status').textContent = t(r.isUnder ? 'under' : 'over');
-
-            let text;
-            if (absDiff < 1) {
-                text = t(r.isUnder ? 'onPaceUnder' : 'onPaceOver');
-            } else if (r.isUnder) {
-                text = t('behind', { pct: formatPct(absDiff), time: timeEquivalent });
-            } else if (r.currentUsage >= 100) {
-                text = t('hitLimit', { time: formatDuration(r.remainingMs) });
-            } else {
-                text = t('ahead', { pct: formatPct(absDiff), time: timeEquivalent });
-            }
-            $('verdictText').textContent = text;
-
-            // Pace bars
-            $('timeElapsed').textContent = formatPct(r.timeElapsed);
-            $('displayUsage').textContent = formatPct(r.currentUsage);
-            $('timeFill').style.width = r.timeElapsed + '%';
-            const usageFill = $('usageFill');
-            usageFill.className = 'fill usage ' + statusClass;
-            usageFill.style.width = r.currentUsage + '%';
-            $('paceMarker').style.left = r.timeElapsed + '%';
-
-            const dayLabels = $('dayLabels');
-            dayLabels.innerHTML = '';
-            const todayIndex = Math.min(6, Math.floor(r.elapsedMs / (24 * HOUR_MS)));
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(r.cycleStart.getTime() + i * 24 * HOUR_MS);
-                const span = document.createElement('span');
-                span.textContent = d.toLocaleDateString(lang, { weekday: 'short' }).replace(/\.$/, '');
-                if (i === todayIndex) span.className = 'today';
-                dayLabels.appendChild(span);
-            }
-
-            // Difference
-            const diffEl = $('difference');
-            diffEl.textContent = (r.difference >= 0 ? '+' : '−') + formatPct(absDiff);
-            diffEl.className = 'stat-value num ' + (r.isUnder ? 'good' : 'bad');
-            $('differenceSub').textContent = t(r.isUnder ? 'diffUnder' : 'diffOver', { time: timeEquivalent });
-
-            // Resets in
-            $('resetsIn').textContent = formatDuration(r.remainingMs);
-            $('resetsAt').textContent = formatDateTime(r.resetAt);
-
-            // Daily budget
-            const daysLeft = r.remainingMs / (24 * HOUR_MS);
-            const dailyEl = $('dailyBudget');
-            if (r.remainingUsage <= 0) {
-                dailyEl.textContent = formatPct(0, 0) + t('perDay');
-                dailyEl.className = 'stat-value num bad';
-                $('dailyBudgetSub').textContent = t('limitReached');
-            } else if (daysLeft < 1 / 24) {
-                dailyEl.textContent = formatPct(r.remainingUsage);
-                dailyEl.className = 'stat-value num';
-                $('dailyBudgetSub').textContent = t('leftBeforeReset');
-            } else {
-                const perDay = r.remainingUsage / Math.max(daysLeft, 1);
-                dailyEl.textContent = formatPct(perDay) + t('perDay');
-                dailyEl.className = 'stat-value num ' + (perDay >= EVEN_DAILY ? 'good' : 'bad');
-                $('dailyBudgetSub').textContent = t('dailySub', { left: formatPct(r.remainingUsage), even: formatPct(EVEN_DAILY) });
-            }
-
-            // Projection at current rate
-            const projectedEl = $('projected');
-            if (r.timeElapsed < 2) {
-                projectedEl.textContent = '–';
-                projectedEl.className = 'stat-value num';
-                $('projectedSub').textContent = t('tooEarly');
-            } else {
-                const projected = (r.currentUsage / r.timeElapsed) * 100;
-                projectedEl.textContent = projected > 999 ? '>999%' : formatPct(projected, 0);
-                projectedEl.className = 'stat-value num ' + (projected <= 100 ? 'good' : 'bad');
-                if (projected > 100 && r.currentUsage < 100) {
-                    const msToLimit = (r.remainingUsage / r.currentUsage) * r.elapsedMs;
-                    $('projectedSub').textContent = t('hitIn', { time: formatDuration(msToLimit) });
-                } else if (projected > 100) {
-                    $('projectedSub').textContent = t('alreadyReached');
-                } else {
-                    $('projectedSub').textContent = t('withinLimit');
-                }
-            }
-
-            $('updatedAt').textContent = t('updated', { time: formatTime(r.now) });
-
-            $('emptyState').style.display = 'none';
-            const results = $('results');
-            if (!results.classList.contains('show')) results.classList.add('show');
-        }
-
-        function onInputChange() {
-            syncSlider();
-            saveState();
-            compute();
-        }
-
-        // ---------- Wiring ----------
-        langButtons.forEach(button => {
-            button.addEventListener('click', () => setLang(button.dataset.lang));
-        });
-
-        modeButtons.forEach(button => {
-            button.addEventListener('click', () => updateUsageMode(button.dataset.mode));
-        });
-
-        dateModeButtons.forEach(button => {
-            button.addEventListener('click', () => updateDateMode(button.dataset.mode));
-        });
-
-        stepButtons.forEach(button => {
-            if (button.dataset.step) {
-                attachRepeat(button, () => stepUsageValue(Number(button.dataset.step)));
-            } else if (button.dataset.dateStep) {
-                attachRepeat(button, () => stepDate(button.dataset.dateStep, Number(button.dataset.dir)));
+        els.usageEdit.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                finishUsageEdit();
+            } else if (e.key === 'Escape') {
+                setState({ used: usageBeforeEdit });
+                finishUsageEdit();
             }
         });
+        els.usageEdit.addEventListener('blur', finishUsageEdit);
 
-        usageSlider.addEventListener('input', () => {
-            usageInput.value = formatInputValue(Number(usageSlider.value));
-            onInputChange();
-        });
-
-        // "Reset just now" asks first, so a stray tap can't wipe the saved date.
+        // "Reset just now" asks first, so a stray tap can't wipe the saved reset.
         let confirmTimer = null;
         function showResetConfirm(show) {
             clearTimeout(confirmTimer);
@@ -1607,52 +1512,46 @@
                 confirmTimer = setTimeout(() => showResetConfirm(false), 8000);
             }
         }
+        function closeResetConfirm() {
+            showResetConfirm(false);
+            $('useNowBtn').focus();
+        }
 
         $('useNowBtn').addEventListener('click', () => showResetConfirm(true));
-
-        $('resetConfirmNo').addEventListener('click', () => {
-            showResetConfirm(false);
-            $('useNowBtn').focus();
-        });
-
+        $('resetConfirmNo').addEventListener('click', closeResetConfirm);
         $('resetConfirmYes').addEventListener('click', () => {
-            const now = new Date();
-            resetInput.value = toLocalInputValue(dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now);
-            showResetConfirm(false);
-            $('useNowBtn').focus();
-            onInputChange();
+            closeResetConfirm();
+            setState({ start: Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS });
         });
+        $('resetConfirm').addEventListener('keydown', e => { if (e.key === 'Escape') closeResetConfirm(); });
 
-        $('resetConfirm').addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                showResetConfirm(false);
-                $('useNowBtn').focus();
-            }
-        });
+        // ---------- Start ----------
+        try {
+            const stored = localStorage.getItem(LANG_KEY);
+            if (LANGS.includes(stored)) lang = stored;
+        } catch (e) { /* storage unavailable */ }
 
-        $('usageForm').addEventListener('submit', e => {
-            e.preventDefault();
-            compute();
-        });
-
-        // Restore saved state
-        applyStaticText();
         const saved = loadState();
         if (saved) {
-            if (saved.dateMode === 'end') updateDateMode('end');
-            if (saved.resetTime) resetInput.value = saved.resetTime;
-            if (saved.mode === 'remaining') updateUsageMode('remaining');
-            if (saved.usage !== undefined) usageInput.value = saved.usage;
-            saveState();
+            if (Number.isFinite(saved.start)) state.start = saved.start;
+            if (saved.dateMode === 'in') state.dateMode = 'in';
+            if (saved.usageMode === 'remaining') state.usageMode = 'remaining';
+            if (Number.isFinite(saved.used)) state.used = Math.round(Math.min(Math.max(saved.used, 0), 100));
         }
-        syncSlider();
-        compute();
 
-        // Keep results fresh as time passes
-        setInterval(() => compute(), 60 * 1000);
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) compute();
-        });
+        // Returning visitors mostly want the verdict: show it first when everything is already filled in.
+        if (state.start !== null && state.used !== null) {
+            els.inputsCard.before(els.resultsCard);
+        }
+
+        applyStaticText();
+        update(false);
+
+        // Refresh on each clock minute, and right away when the tab comes back.
+        (function scheduleTick() {
+            setTimeout(() => { update(false); scheduleTick(); }, MINUTE_MS - (Date.now() % MINUTE_MS) + 50);
+        })();
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) update(false); });
     </script>
 </body>
 </html>
