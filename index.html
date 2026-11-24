@@ -233,7 +233,6 @@
 
         .notice.show { display: block; }
 
-        input[type="datetime-local"],
         input[type="number"] {
             width: 100%;
             padding: 12px 14px;
@@ -247,33 +246,81 @@
             color-scheme: light dark;
         }
 
-        /* iOS Safari gives date inputs an intrinsic min-width that ignores width: 100%. */
-        input[type="datetime-local"] {
-            display: block;
-            min-width: 0;
-            max-width: 100%;
-            min-height: 50px;
-            -webkit-appearance: none;
-            appearance: none;
-            text-align: left;
-        }
-
-        input[type="datetime-local"]::-webkit-date-and-time-value {
-            text-align: left;
-            margin: 0;
-        }
-
         .field { min-width: 0; }
 
-        input[type="datetime-local"]:focus,
-        input[type="number"]:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: var(--surface);
-            box-shadow: 0 0 0 4px var(--accent-soft);
+        input.invalid { border-color: var(--over); }
+
+        /* Date & time stepper: −/+ buttons instead of the native picker */
+        .date-stepper {
+            display: grid;
+            gap: 8px;
         }
 
-        input.invalid { border-color: var(--over); }
+        .date-row {
+            display: grid;
+            grid-template-columns: 64px 48px minmax(0, 1fr) 48px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-row-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-2);
+        }
+
+        .date-row .step-btn {
+            min-height: 46px;
+            font-size: 22px;
+        }
+
+        .step-value {
+            min-height: 46px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .date-stepper.invalid .step-value { border-color: var(--over); }
+
+        .reset-confirm {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-2);
+            white-space: nowrap;
+        }
+
+        .reset-confirm.show { display: inline-flex; }
+
+        .confirm-btn {
+            padding: 4px 10px;
+            border-radius: 7px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 420px) {
+            .date-row { grid-template-columns: 54px 44px minmax(0, 1fr) 44px; gap: 6px; }
+            .date-row .step-btn, .step-value { min-height: 44px; }
+            .step-value { font-size: 15px; padding: 0 6px; }
+            .field-head { flex-wrap: wrap; }
+        }
 
         button {
             font: inherit;
@@ -344,6 +391,10 @@
             font-weight: 600;
             min-height: 52px;
             -moz-appearance: textfield;
+            /* Display only: change it with −/+ or the slider, never the keyboard. */
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .stepper input::-webkit-outer-spin-button,
@@ -364,6 +415,8 @@
             place-items: center;
             touch-action: manipulation;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
             transition: background 0.15s, border-color 0.15s, transform 0.1s;
         }
 
@@ -657,14 +710,39 @@
             <form id="usageForm" novalidate>
                 <div class="field">
                     <div class="field-head">
-                        <label for="resetTime" id="resetLabel">Cycle start</label>
+                        <span class="label" id="resetLabel">Cycle start</span>
                         <button type="button" class="link-btn" id="useNowBtn" data-i18n="resetNow" data-i18n-attr="title:resetNowTitle" title="My usage window reset just now">Reset just now</button>
+                        <span class="reset-confirm" id="resetConfirm" role="group" aria-labelledby="resetConfirmText">
+                            <span id="resetConfirmText" data-i18n="resetConfirmQ">Reset to now?</span>
+                            <button type="button" class="confirm-btn" id="resetConfirmYes" data-i18n="confirm">Confirm</button>
+                            <button type="button" class="link-btn" id="resetConfirmNo" data-i18n="cancel">Cancel</button>
+                        </span>
                     </div>
                     <div class="segmented" id="dateModeToggle" role="group" data-i18n-attr="aria-label:dateTypeAria" aria-label="Cycle date type">
                         <button type="button" class="active" data-mode="start" aria-pressed="true" data-i18n="cycleStart">Cycle start</button>
                         <button type="button" data-mode="end" aria-pressed="false" data-i18n="cycleEnd">Cycle end</button>
                     </div>
-                    <input type="datetime-local" id="resetTime" aria-describedby="resetDay cycleHint">
+                    <input type="hidden" id="resetTime">
+                    <div class="date-stepper" id="dateStepper" role="group" aria-labelledby="resetLabel" aria-describedby="resetDay cycleHint">
+                        <div class="date-row">
+                            <span class="date-row-label" data-i18n="stepDay">Day</span>
+                            <button type="button" class="step-btn" data-date-step="day" data-dir="-1" data-i18n-attr="aria-label:dayPrev" aria-label="Previous day">−</button>
+                            <div class="step-value num" id="dateDayValue">—</div>
+                            <button type="button" class="step-btn" data-date-step="day" data-dir="1" data-i18n-attr="aria-label:dayNext" aria-label="Next day">+</button>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-row-label" data-i18n="stepHour">Hour</span>
+                            <button type="button" class="step-btn" data-date-step="hour" data-dir="-1" data-i18n-attr="aria-label:hourPrev" aria-label="One hour earlier">−</button>
+                            <div class="step-value num" id="dateHourValue">—</div>
+                            <button type="button" class="step-btn" data-date-step="hour" data-dir="1" data-i18n-attr="aria-label:hourNext" aria-label="One hour later">+</button>
+                        </div>
+                        <div class="date-row">
+                            <span class="date-row-label" data-i18n="stepMinute">Minute</span>
+                            <button type="button" class="step-btn" data-date-step="minute" data-dir="-1" data-i18n-attr="aria-label:minutePrev" aria-label="5 minutes earlier">−</button>
+                            <div class="step-value num" id="dateMinuteValue">—</div>
+                            <button type="button" class="step-btn" data-date-step="minute" data-dir="1" data-i18n-attr="aria-label:minuteNext" aria-label="5 minutes later">+</button>
+                        </div>
+                    </div>
                     <p class="day-readout" id="resetDay" aria-live="polite">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
                         <span id="resetDayText"></span>
@@ -684,7 +762,7 @@
                     </div>
                     <div class="stepper">
                         <button type="button" class="step-btn" data-step="-1" data-i18n-attr="aria-label:decrease" aria-label="Decrease by 1%">−</button>
-                        <input type="number" id="usageValue" class="num" min="0" max="100" step="0.1" inputmode="decimal" placeholder="—" aria-labelledby="usageInputLabel" aria-describedby="usageModeDescription">
+                        <input type="number" id="usageValue" class="num" min="0" max="100" step="0.1" readonly tabindex="-1" inputmode="none" placeholder="—" aria-labelledby="usageInputLabel" aria-describedby="usageModeDescription">
                         <button type="button" class="step-btn" data-step="1" data-i18n-attr="aria-label:increase" aria-label="Increase by 1%">+</button>
                     </div>
                     <div class="slider-wrap">
@@ -787,6 +865,18 @@
                 cycleEnd: 'Cycle end',
                 resetNow: 'Reset just now',
                 resetNowTitle: 'My usage window reset just now',
+                resetConfirmQ: 'Reset to now?',
+                confirm: 'Confirm',
+                cancel: 'Cancel',
+                stepDay: 'Day',
+                stepHour: 'Hour',
+                stepMinute: 'Minute',
+                dayPrev: 'Previous day',
+                dayNext: 'Next day',
+                hourPrev: 'One hour earlier',
+                hourNext: 'One hour later',
+                minutePrev: '5 minutes earlier',
+                minuteNext: '5 minutes later',
                 dateTypeAria: 'Cycle date type',
                 hintStart: 'When your current 7-day usage window began (your last reset). It repeats weekly, so you only need to enter it once.',
                 hintEnd: 'When your current 7-day usage window resets next, as many providers show it. It repeats weekly, so you only need to enter it once.',
@@ -853,6 +943,18 @@
                 cycleEnd: 'Akhir siklus',
                 resetNow: 'Baru saja reset',
                 resetNowTitle: 'Jendela pemakaianku baru saja direset',
+                resetConfirmQ: 'Atur ke sekarang?',
+                confirm: 'Ya',
+                cancel: 'Batal',
+                stepDay: 'Hari',
+                stepHour: 'Jam',
+                stepMinute: 'Menit',
+                dayPrev: 'Hari sebelumnya',
+                dayNext: 'Hari berikutnya',
+                hourPrev: 'Satu jam lebih awal',
+                hourNext: 'Satu jam lebih lambat',
+                minutePrev: '5 menit lebih awal',
+                minuteNext: '5 menit lebih lambat',
                 dateTypeAria: 'Jenis tanggal siklus',
                 hintStart: 'Kapan jendela pemakaian 7 hari saat ini dimulai (reset terakhirmu). Berulang setiap minggu, jadi cukup diisi sekali.',
                 hintEnd: 'Kapan jendela pemakaian 7 hari saat ini akan direset, seperti yang ditampilkan banyak penyedia. Berulang setiap minggu, jadi cukup diisi sekali.',
@@ -919,6 +1021,18 @@
                 cycleEnd: 'Fin del ciclo',
                 resetNow: 'Se reinició ahora',
                 resetNowTitle: 'Mi ventana de uso se acaba de reiniciar',
+                resetConfirmQ: '¿Reiniciar a ahora?',
+                confirm: 'Confirmar',
+                cancel: 'Cancelar',
+                stepDay: 'Día',
+                stepHour: 'Hora',
+                stepMinute: 'Minuto',
+                dayPrev: 'Día anterior',
+                dayNext: 'Día siguiente',
+                hourPrev: 'Una hora antes',
+                hourNext: 'Una hora después',
+                minutePrev: '5 minutos antes',
+                minuteNext: '5 minutos después',
                 dateTypeAria: 'Tipo de fecha del ciclo',
                 hintStart: 'Cuándo comenzó tu ventana de uso actual de 7 días (tu último reinicio). Se repite cada semana, así que solo tienes que introducirla una vez.',
                 hintEnd: 'Cuándo se reinicia tu ventana de uso actual de 7 días, como lo muestran muchos proveedores. Se repite cada semana, así que solo tienes que introducirla una vez.',
@@ -1158,11 +1272,6 @@
             onInputChange();
         }
 
-        function updateResetMax(now = new Date()) {
-            // A start must be in the past; an end can be at most one week ahead.
-            resetInput.max = toLocalInputValue(dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now);
-        }
-
         function updateDateMode(mode) {
             if (dateInputMode === mode) return;
 
@@ -1176,7 +1285,6 @@
             });
 
             applyModeText();
-            updateResetMax();
 
             // Shift the date by a week so it still describes the same cycle.
             if (previous && !isNaN(previous.getTime())) {
@@ -1190,6 +1298,7 @@
         function renderDayReadout() {
             const readout = $('resetDay');
             const parsed = resetInput.value ? new Date(resetInput.value) : null;
+            renderDateStepper(parsed);
             if (!parsed || isNaN(parsed.getTime())) {
                 readout.classList.remove('show');
                 return;
@@ -1202,6 +1311,79 @@
             readout.classList.add('show');
         }
 
+        function renderDateStepper(date) {
+            const ok = date && !isNaN(date.getTime());
+            $('dateDayValue').textContent = ok
+                ? date.toLocaleDateString(lang, { weekday: 'short', month: 'short', day: 'numeric' })
+                : '—';
+            $('dateHourValue').textContent = ok
+                ? date.toLocaleTimeString(lang, { hour: 'numeric' })
+                : '—';
+            $('dateMinuteValue').textContent = ok
+                ? ':' + String(date.getMinutes()).padStart(2, '0')
+                : '—';
+        }
+
+        // Step the cycle date by a day, an hour or 5 minutes (snapping to the 5-minute grid).
+        function stepDate(unit, dir) {
+            const now = new Date();
+            const max = dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now;
+            let date = resetInput.value ? new Date(resetInput.value) : null;
+
+            if (!date || isNaN(date.getTime())) {
+                // Nothing entered yet: step from "now" (or a week from now for a cycle end).
+                date = new Date(max.getTime());
+                date.setSeconds(0, 0);
+            }
+
+            if (unit === 'day') {
+                date.setDate(date.getDate() + dir);
+            } else if (unit === 'hour') {
+                date.setHours(date.getHours() + dir);
+            } else {
+                const m = date.getMinutes();
+                const snapped = dir > 0 ? Math.floor(m / 5) * 5 + 5 : Math.ceil(m / 5) * 5 - 5;
+                date.setMinutes(snapped);
+            }
+
+            // A start can't be in the future; an end can't be more than a week out.
+            if (date > max) {
+                date = new Date(max.getTime());
+                date.setSeconds(0, 0);
+            }
+            resetInput.value = toLocalInputValue(date);
+            onInputChange();
+        }
+
+        // Tap for one step; press and hold to repeat, speeding up the longer it's held.
+        function attachRepeat(button, action) {
+            let timer = null;
+            let delay = 0;
+            const stop = () => {
+                clearTimeout(timer);
+                timer = null;
+            };
+            const tick = () => {
+                action();
+                delay = Math.max(50, delay * 0.82);
+                timer = setTimeout(tick, delay);
+            };
+            button.addEventListener('pointerdown', e => {
+                if (e.button !== 0) return;
+                e.preventDefault(); // no focus/text selection, no iOS callout
+                stop();
+                action();
+                delay = 180;
+                timer = setTimeout(tick, 420);
+            });
+            ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(type => button.addEventListener(type, stop));
+            button.addEventListener('contextmenu', e => e.preventDefault());
+            // Keyboard activation (Enter/Space) arrives as a click with no pointer.
+            button.addEventListener('click', e => {
+                if (e.detail === 0) action();
+            });
+        }
+
         // ---------- Core calculation ----------
         function compute(now = new Date()) {
             const resetError = $('resetError');
@@ -1210,7 +1392,7 @@
             resetError.classList.remove('show');
             usageError.classList.remove('show');
             notice.classList.remove('show');
-            resetInput.classList.remove('invalid');
+            $('dateStepper').classList.remove('invalid');
             usageInput.classList.remove('invalid');
 
             renderDayReadout();
@@ -1224,10 +1406,10 @@
                 const isEnd = dateInputMode === 'end';
                 const anchorStart = isEnd ? new Date(parsed.getTime() - WEEK_MS) : parsed;
                 if (isNaN(parsed.getTime())) {
-                    showFieldError(resetInput, resetError, t('errDate'));
+                    showFieldError($('dateStepper'), resetError, t('errDate'));
                     valid = false;
                 } else if (anchorStart > now) {
-                    showFieldError(resetInput, resetError, t(isEnd ? 'errEnd' : 'errStart'));
+                    showFieldError($('dateStepper'), resetError, t(isEnd ? 'errEnd' : 'errStart'));
                     valid = false;
                 } else {
                     // Weekly cycles repeat: roll an old date forward to the current window.
@@ -1402,10 +1584,11 @@
         });
 
         stepButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                stepUsageValue(Number(button.dataset.step));
-                usageInput.focus();
-            });
+            if (button.dataset.step) {
+                attachRepeat(button, () => stepUsageValue(Number(button.dataset.step)));
+            } else if (button.dataset.dateStep) {
+                attachRepeat(button, () => stepDate(button.dataset.dateStep, Number(button.dataset.dir)));
+            }
         });
 
         usageSlider.addEventListener('input', () => {
@@ -1413,14 +1596,38 @@
             onInputChange();
         });
 
-        usageInput.addEventListener('input', onInputChange);
-        resetInput.addEventListener('input', onInputChange);
-        resetInput.addEventListener('change', onInputChange);
+        // "Reset just now" asks first, so a stray tap can't wipe the saved date.
+        let confirmTimer = null;
+        function showResetConfirm(show) {
+            clearTimeout(confirmTimer);
+            $('useNowBtn').hidden = show;
+            $('resetConfirm').classList.toggle('show', show);
+            if (show) {
+                $('resetConfirmYes').focus();
+                confirmTimer = setTimeout(() => showResetConfirm(false), 8000);
+            }
+        }
 
-        $('useNowBtn').addEventListener('click', () => {
+        $('useNowBtn').addEventListener('click', () => showResetConfirm(true));
+
+        $('resetConfirmNo').addEventListener('click', () => {
+            showResetConfirm(false);
+            $('useNowBtn').focus();
+        });
+
+        $('resetConfirmYes').addEventListener('click', () => {
             const now = new Date();
             resetInput.value = toLocalInputValue(dateInputMode === 'end' ? new Date(now.getTime() + WEEK_MS) : now);
+            showResetConfirm(false);
+            $('useNowBtn').focus();
             onInputChange();
+        });
+
+        $('resetConfirm').addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                showResetConfirm(false);
+                $('useNowBtn').focus();
+            }
         });
 
         $('usageForm').addEventListener('submit', e => {
@@ -1438,15 +1645,11 @@
             if (saved.usage !== undefined) usageInput.value = saved.usage;
             saveState();
         }
-        updateResetMax();
         syncSlider();
         compute();
 
         // Keep results fresh as time passes
-        setInterval(() => {
-            updateResetMax();
-            compute();
-        }, 60 * 1000);
+        setInterval(() => compute(), 60 * 1000);
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) compute();
         });
