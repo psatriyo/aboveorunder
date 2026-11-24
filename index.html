@@ -978,13 +978,13 @@
         };
         const LANGS = Object.keys(I18N);
 
+        // Start in English unless the visitor picked a language before.
         function detectLang() {
             try {
                 const stored = localStorage.getItem(LANG_KEY);
                 if (LANGS.includes(stored)) return stored;
             } catch (e) { /* storage unavailable */ }
-            const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
-            return LANGS.includes(browser) ? browser : 'en';
+            return 'en';
         }
 
         let lang = detectLang();
